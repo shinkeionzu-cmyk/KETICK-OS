@@ -1,80 +1,160 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="ms" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS | KETICK OS</title>
+    <title>KETICK POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .product-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .product-card:active { transform: scale(0.95); background: rgba(59, 130, 246, 0.1); }
+        /* Sembunyikan scrollbar tapi fungsi scroll kekal */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
 </head>
-<body class="bg-[#020617] text-slate-100 min-h-screen p-4 pb-20">
+<body class="p-4 pb-32">
 
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-xl font-bold italic">KETICK <span class="text-blue-500">POS</span></h1>
-        <div class="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-500 text-[10px] font-bold">
-            ONLINE
-        </div>
-    </div>
-
-    <div id="product-grid" class="grid grid-cols-2 gap-4 mb-8">
-        <p class="text-slate-500 col-span-2 text-center py-10">Memuatkan produk...</p>
-    </div>
-
-    <div class="fixed bottom-0 left-0 right-0 p-4 bg-[#0f172a]/80 backdrop-blur-lg border-t border-slate-800">
-        <div class="flex justify-between items-center max-w-md mx-auto">
-            <div>
-                <p class="text-[10px] text-slate-400 uppercase tracking-widest">Total Bayaran</p>
-                <p id="grand-total" class="text-xl font-bold text-blue-500">RM 0.00</p>
+        <div>
+            <h1 class="text-blue-500 font-black tracking-tighter italic text-xl">KETICK <span class="text-white">POS</span></h1>
+            <div class="flex items-center gap-1.5 mt-1">
+                <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Live Inventory</span>
             </div>
-            <button onclick="processPayment()" class="bg-blue-600 px-8 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-all">
-                BAYAR
-            </button>
+        </div>
+        <div class="flex gap-2">
+             <button onclick="viewCart()" class="relative p-3 glass rounded-2xl">
+                <i class="fas fa-shopping-basket text-blue-500"></i>
+                <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">0</span>
+             </button>
         </div>
     </div>
 
-    <script type="module">
-        import { db, collection, addDoc, updateDoc, doc, onSnapshot } from "/KETICK-OS/firebase-config.js";
+    <div id="product-list" class="grid grid-cols-2 gap-4 overflow-y-auto no-scrollbar">
+        <div class="col-span-2 py-20 text-center opacity-20">
+            <i class="fas fa-circle-notch animate-spin text-3xl mb-3"></i>
+            <p class="text-xs font-bold uppercase tracking-widest">Memuatkan Produk...</p>
+        </div>
+    </div>
 
-        let products = [];
+    <div id="checkout-bar" class="fixed bottom-6 left-4 right-4 glass p-5 rounded-[2.5rem] flex justify-between items-center shadow-2xl border-blue-500/20 hidden transition-all">
+        <div>
+            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Jumlah Perlu Bayar</p>
+            <h3 id="total-price" class="text-xl font-black text-emerald-400">RM 0.00</h3>
+        </div>
+        <button onclick="processCheckout()" class="bg-blue-600 hover:bg-blue-700 text-white font-black px-8 py-4 rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-blue-600/20">Bayar Now</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCT2nlX1fjiGvXAuaBWein6e1BQOOCH8ew",
+            authDomain: "ketick-os.firebaseapp.com",
+            projectId: "ketick-os",
+            storageBucket: "ketick-os.firebasestorage.app",
+            messagingSenderId: "407192673747",
+            appId: "1:407192673747:web:9196c8d72d77a642f02326"
+        };
+
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.firestore();
+
         let cart = [];
 
-        // Ambil Data
-        onSnapshot(collection(db, "inventory"), (snapshot) => {
-            products = [];
-            snapshot.forEach((doc) => products.push({ id: doc.id, ...doc.data() }));
-            render();
-        });
+        // 1. Tarik Produk dari Firestore (Koleksi: inventory)
+        function loadProducts() {
+            db.collection("inventory").onSnapshot(snap => {
+                const list = document.getElementById('product-list');
+                list.innerHTML = "";
+                
+                if(snap.empty) {
+                    list.innerHTML = `<div class="col-span-2 text-center py-20 opacity-30 text-xs font-bold uppercase">Tiada stok dalam inventori.</div>`;
+                    return;
+                }
 
-        function render() {
-            const grid = document.getElementById('product-grid');
-            grid.innerHTML = products.map(p => `
-                <div onclick="addToCart('${p.id}')" class="bg-[#0f172a] p-4 rounded-3xl border border-slate-800 active:border-blue-500 transition-all">
-                    <div class="text-3xl mb-2">${p.category === 'Kasut' ? '👟' : '🧼'}</div>
-                    <h3 class="text-sm font-bold truncate">${p.name}</h3>
-                    <p class="text-blue-500 font-bold text-sm">RM ${p.price.toFixed(2)}</p>
-                    <p class="text-[9px] text-slate-500 mt-1">Stok: ${p.stock}</p>
-                </div>
-            `).join('');
+                snap.forEach(doc => {
+                    const p = doc.data();
+                    const id = doc.id;
+                    list.innerHTML += `
+                        <div onclick="addToCart('${id}', '${p.name}', ${p.price})" class="product-card glass p-5 rounded-[2rem] border border-white/5 relative overflow-hidden group">
+                            <div class="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center mb-4 border border-blue-500/20">
+                                <i class="fas fa-box text-blue-500"></i>
+                            </div>
+                            <h3 class="font-bold text-sm leading-tight mb-1 truncate">${p.name}</h3>
+                            <p class="text-blue-400 font-black text-xs tracking-tighter">RM ${parseFloat(p.price).toFixed(2)}</p>
+                            <p class="text-[9px] font-bold text-slate-500 mt-2 uppercase tracking-widest">Stok: ${p.stock || 0}</p>
+                            <i class="fas fa-plus absolute top-4 right-4 text-[10px] opacity-20 group-hover:opacity-100 transition-opacity"></i>
+                        </div>
+                    `;
+                });
+            });
         }
 
-        window.addToCart = (id) => {
-            const p = products.find(x => x.id === id);
-            if (p.stock <= 0) return alert("Habis stok!");
-            cart.push(p);
-            const total = cart.reduce((s, i) => s + i.price, 0);
-            document.getElementById('grand-total').innerText = `RM ${total.toFixed(2)}`;
-        };
+        // 2. Fungsi Add to Cart
+        function addToCart(id, name, price) {
+            cart.push({ id, name, price });
+            updateUI();
+        }
 
-        window.processPayment = async () => {
-            if (cart.length === 0) return alert("Bakul kosong!");
+        function updateUI() {
+            const bar = document.getElementById('checkout-bar');
+            const count = document.getElementById('cart-count');
+            const totalDisplay = document.getElementById('total-price');
+            
+            count.innerText = cart.length;
+            
+            if(cart.length > 0) {
+                bar.classList.remove('hidden');
+                let total = cart.reduce((sum, item) => sum + item.price, 0);
+                totalDisplay.innerText = `RM ${total.toFixed(2)}`;
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        // 3. Simpan Jualan ke Firebase (Checkout)
+        async function processCheckout() {
+            if(cart.length === 0) return;
+            
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            const saleData = {
+                items: cart,
+                totalPrice: total,
+                date: new Date().toISOString().split('T')[0],
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
             try {
-                const total = cart.reduce((s, i) => s + i.price, 0);
-                await addDoc(collection(db, "sales"), { items: cart.length, total: total, date: new Date() });
-                alert("Jualan Berjaya! Resit dicetak (Digital)");
+                // Simpan ke koleksi 'sales'
+                await db.collection("sales").add(saleData);
+                
+                // Update stok di inventory secara automatik
+                for(let item of cart) {
+                    const ref = db.collection("inventory").doc(item.id);
+                    await db.runTransaction(async (transaction) => {
+                        const sfDoc = await transaction.get(ref);
+                        if (!sfDoc.exists) return;
+                        const newStock = sfDoc.data().stock - 1;
+                        transaction.update(ref, { stock: newStock });
+                    });
+                }
+
+                alert("Jualan Berjaya Disimpan!");
                 cart = [];
-                document.getElementById('grand-total').innerText = "RM 0.00";
-            } catch (e) { alert("Ralat: " + e.message); }
-        };
+                updateUI();
+            } catch (e) {
+                console.error("Ralat Checkout: ", e);
+                alert("Gagal memproses jualan.");
+            }
+        }
+
+        loadProducts();
     </script>
 </body>
 </html>
