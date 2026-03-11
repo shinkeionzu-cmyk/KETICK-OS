@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank & Wallet | KETICK OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .bank-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(59, 130, 246, 0.2); }
+    </style>
+</head>
+<body class="p-4 lg:p-8">
+
+    <div class="mb-8">
+        <h1 class="text-2xl font-extrabold tracking-tight">Bank & Wallet</h1>
+        <p class="text-slate-500 text-sm">Urus baki tunai dan akaun bank perniagaan.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div class="p-8 rounded-[2.5rem] bank-card shadow-2xl relative overflow-hidden">
+            <div class="relative z-10">
+                <div class="flex justify-between items-start mb-10">
+                    <i class="fas fa-wallet text-3xl text-amber-500"></i>
+                    <span class="text-[10px] font-bold opacity-50 uppercase tracking-widest">Physical Cash</span>
+                </div>
+                <p class="text-slate-400 text-xs mb-1">CASH IN HAND</p>
+                <h2 class="text-3xl font-black mb-6" id="cash-balance">RM 0.00</h2>
+                <div class="flex gap-2">
+                    <button onclick="adjustBank('cash', 50)" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-xs font-bold transition">+ RM50</button>
+                    <button onclick="adjustBank('cash', -50)" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-xs font-bold transition">- RM50</button>
+                </div>
+            </div>
+            <i class="fas fa-money-bill-wave absolute right-[-20px] bottom-[-20px] text-8xl opacity-5 rotate-12"></i>
+        </div>
+
+        <div class="p-8 rounded-[2.5rem] bank-card shadow-2xl relative overflow-hidden border-l-4 border-l-blue-600">
+            <div class="relative z-10">
+                <div class="flex justify-between items-start mb-10">
+                    <i class="fas fa-university text-3xl text-blue-500"></i>
+                    <span class="text-[10px] font-bold opacity-50 uppercase tracking-widest">Business Bank</span>
+                </div>
+                <p class="text-slate-400 text-xs mb-1">MAYBANK / CIMB / TNG</p>
+                <h2 class="text-3xl font-black mb-6" id="bank-balance">RM 0.00</h2>
+                <div class="flex gap-2">
+                    <button onclick="adjustBank('bank', 100)" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl text-xs font-bold transition">+ RM100</button>
+                    <button onclick="adjustBank('bank', -100)" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl text-xs font-bold transition">- RM100</button>
+                </div>
+            </div>
+            <i class="fas fa-credit-card absolute right-[-20px] bottom-[-20px] text-8xl opacity-5 rotate-12"></i>
+        </div>
+    </div>
+
+    <div class="p-8 rounded-[2.5rem] glass border border-slate-800">
+        <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+            <i class="fas fa-exchange-alt text-blue-500"></i> Pindahan Wang (Transfer)
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Dari</label>
+                <select id="from-account" class="w-full mt-1 p-4 rounded-2xl bg-slate-900 border border-slate-800 outline-none">
+                    <option value="cash">Tunai (Cash)</option>
+                    <option value="bank">Bank Account</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Jumlah (RM)</label>
+                <input type="number" id="transfer-amount" placeholder="0.00" class="w-full mt-1 p-4 rounded-2xl bg-slate-900 border border-slate-800 outline-none">
+            </div>
+            <div class="flex items-end">
+                <button onclick="executeTransfer()" class="w-full p-4 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-bold transition shadow-lg shadow-emerald-900/20">
+                    PINDAHKAN SEKARANG
+                </button>
+            </div>
+        </div>
+        <p class="mt-4 text-[10px] text-slate-500 italic text-center">Contoh: Pindahkan tunai harian ke akaun bank perniagaan.</p>
+    </div>
+
+    <script>
+        // Load Balances
+        let balances = JSON.parse(localStorage.getItem('ketick_bank')) || {
+            cash: 500.00,
+            bank: 2500.00
+        };
+
+        function updateDisplay() {
+            document.getElementById('cash-balance').innerText = `RM ${balances.cash.toFixed(2)}`;
+            document.getElementById('bank-balance').innerText = `RM ${balances.bank.toFixed(2)}`;
+            localStorage.setItem('ketick_bank', JSON.stringify(balances));
+        }
+
+        function adjustBank(type, amount) {
+            balances[type] = Math.max(0, balances[type] + amount);
+            updateDisplay();
+        }
+
+        function executeTransfer() {
+            const amount = parseFloat(document.getElementById('transfer-amount').value);
+            const from = document.getElementById('from-account').value;
+            const to = from === 'cash' ? 'bank' : 'cash';
+
+            if (!amount || amount <= 0) return alert("Sila masukkan jumlah sah!");
+            if (balances[from] < amount) return alert("Baki tidak mencukupi!");
+
+            balances[from] -= amount;
+            balances[to] += amount;
+            
+            document.getElementById('transfer-amount').value = '';
+            alert(`Berjaya pindah RM${amount.toFixed(2)} dari ${from.toUpperCase()} ke ${to.toUpperCase()}`);
+            updateDisplay();
+        }
+
+        window.onload = updateDisplay;
+    </script>
+</body>
+</html>
