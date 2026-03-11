@@ -28,6 +28,15 @@
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .v-badge { background: linear-gradient(90deg, #3b82f6, #8b5cf6); padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+        
+        /* Navigasi Bawah untuk Mobile */
+        .mobile-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: 70px; background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px); border-t: 1px solid rgba(255,255,255,0.1);
+            display: flex; justify-content: space-around; align-items: center;
+            z-index: 100;
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-all duration-500">
@@ -37,92 +46,59 @@
             <div class="w-20 h-20 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-500/30">
                 <i class="fas fa-shield-alt text-3xl text-blue-500"></i>
             </div>
-            <h2 class="text-2xl font-bold mb-2">Security Verification</h2>
-            <p class="text-slate-400 text-sm mb-8">Sila masukkan 4 digit PIN.</p>
+            <h2 class="text-2xl font-bold mb-2">Verification</h2>
+            <p class="text-slate-400 text-sm mb-8">Masukkan 4 digit PIN.</p>
             <div class="flex justify-center gap-4 mb-8">
                 <input type="password" maxlength="1" class="pin-input" autofocus>
                 <input type="password" maxlength="1" class="pin-input">
                 <input type="password" maxlength="1" class="pin-input">
                 <input type="password" maxlength="1" class="pin-input">
             </div>
-            <div id="device-info" class="mb-6 p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-[10px] text-slate-500 font-mono text-left">
-                <p id="device-id-label">Checking device...</p>
-            </div>
-            <button onclick="verifyAccess()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-blue-600/20">SAHKAN AKSES</button>
+            <button onclick="verifyAccess()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-600/20">SAHKAN</button>
         </div>
     </div>
 
-    <nav class="fixed bottom-0 left-0 w-full lg:top-0 lg:left-0 lg:w-72 lg:h-screen glass lg:border-r border-t border-slate-200 dark:border-slate-800 z-50">
-        <div class="hidden lg:flex flex-col h-full p-6">
-            <div class="mb-10 flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <i class="fas fa-bolt text-white text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="font-extrabold text-xl tracking-tight">KETICK OS</h1>
-                    <span class="v-badge text-white">V1.0 Stable</span>
-                </div>
-            </div>
-
-            <div class="flex-grow overflow-y-auto no-scrollbar space-y-2">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Utama</p>
-                
-                <button onclick="loadModule('dashboard')" class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-all text-left group">
-                    <i class="fas fa-th-large w-5 text-blue-500 group-hover:scale-110"></i> Dashboard
-                </button>
-                
-                <button onclick="loadModule('pos')" class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-all text-left group">
-                    <i class="fas fa-cash-register w-5 text-emerald-500 group-hover:scale-110"></i> Mini POS
-                </button>
-                
-                <button onclick="loadModule('stock')" class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-all text-left group">
-                    <i class="fas fa-boxes w-5 text-amber-500 group-hover:scale-110"></i> Stock
-                </button>
-
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-6 mb-4">Kewangan</p>
-                
-                <button onclick="loadModule('bank')" class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-all text-left group">
-                    <i class="fas fa-university w-5 text-blue-400 group-hover:scale-110"></i> Bank & Wallet
-                </button>
-                
-                <button onclick="loadModule('accounting')" class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-all text-left group">
-                    <i class="fas fa-file-invoice-dollar w-5 text-purple-500 group-hover:scale-110"></i> Accounting
-                </button>
-            </div>
-
-            <div class="mt-auto pt-6 border-t border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <img src="https://ui-avatars.com/api/?name=Admin&background=random" class="w-8 h-8 rounded-full">
-                    <span class="text-sm font-semibold">Admin</span>
-                </div>
-                <button id="themeToggle" class="p-2 rounded-lg bg-slate-800">🌓</button>
-            </div>
+    <nav class="hidden lg:flex fixed top-0 left-0 w-72 h-screen glass border-r border-slate-800 flex-col p-6 z-50">
+        <div class="mb-10 flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center"><i class="fas fa-bolt text-white"></i></div>
+            <h1 class="font-extrabold text-xl">KETICK OS</h1>
+        </div>
+        <div class="flex-grow space-y-2">
+            <button onclick="loadModule('dashboard')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800"><i class="fas fa-th-large mr-3 text-blue-500"></i> Dashboard</button>
+            <button onclick="loadModule('pos')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800"><i class="fas fa-cash-register mr-3 text-emerald-500"></i> Mini POS</button>
+            <button onclick="loadModule('stock')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800"><i class="fas fa-boxes mr-3 text-amber-500"></i> Stock</button>
+            <button onclick="loadModule('bank')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800"><i class="fas fa-university mr-3 text-blue-400"></i> Bank</button>
+            <button onclick="loadModule('accounting')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800"><i class="fas fa-file-invoice-dollar mr-3 text-purple-500"></i> Accounting</button>
         </div>
     </nav>
 
-    <main class="lg:ml-72 min-h-screen">
-        <header class="p-6 lg:p-10 pb-0">
-            <h2 id="moduleTitle" class="text-3xl font-extrabold tracking-tight">DASHBOARD</h2>
-            <p id="moduleSubtitle" class="text-slate-500 text-sm">Selamat datang semula.</p>
+    <div class="mobile-nav lg:hidden">
+        <button onclick="loadModule('dashboard')" class="flex flex-col items-center text-blue-500"><i class="fas fa-home"></i><span class="text-[10px]">Home</span></button>
+        <button onclick="loadModule('pos')" class="flex flex-col items-center opacity-60"><i class="fas fa-cash-register"></i><span class="text-[10px]">POS</span></button>
+        <button onclick="loadModule('stock')" class="flex flex-col items-center opacity-60"><i class="fas fa-boxes"></i><span class="text-[10px]">Stock</span></button>
+        <button onclick="loadModule('bank')" class="flex flex-col items-center opacity-60"><i class="fas fa-university"></i><span class="text-[10px]">Bank</span></button>
+        <button onclick="loadModule('accounting')" class="flex flex-col items-center opacity-60"><i class="fas fa-file-invoice-dollar"></i><span class="text-[10px]">Acc</span></button>
+    </div>
+
+    <main class="lg:ml-72 min-h-screen pb-20">
+        <header class="p-6 lg:p-10 pb-0 flex justify-between items-center">
+            <h2 id="moduleTitle" class="text-2xl font-black uppercase">DASHBOARD</h2>
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-800 lg:block">🌓</button>
         </header>
 
-        <div class="w-full h-[calc(100vh-140px)] p-4 lg:p-10">
-            <iframe id="app-frame" src="about:blank" class="w-full h-full border-none rounded-[2.5rem] shadow-2xl hidden bg-[#020617]"></iframe>
+        <div class="w-full h-[calc(100vh-150px)] p-4 lg:p-10">
+            <iframe id="app-frame" src="about:blank" class="w-full h-full border-none rounded-[2rem] shadow-2xl hidden bg-[#020617]"></iframe>
             
             <div id="dashboard-view" class="block space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="p-6 rounded-3xl glass border-l-4 border-l-blue-600">
-                        <p class="text-slate-500 text-sm font-semibold">Jualan Kasut Digital</p>
-                        <h3 class="text-2xl font-bold">RM 14,250.00</h3>
-                    </div>
+                <div class="p-6 rounded-3xl glass border-l-4 border-l-blue-600">
+                    <p class="text-slate-500 text-sm font-semibold">Status Sistem</p>
+                    <h3 class="text-2xl font-bold">Aktif & Selamat</h3>
                 </div>
                 
-                <div onclick="loadModule('pos')" class="p-10 rounded-[3rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white relative overflow-hidden cursor-pointer hover:scale-[1.01] transition-all shadow-2xl">
-                    <div class="relative z-10">
-                        <h2 class="text-3xl font-bold mb-2 text-white">Buka Mini POS</h2>
-                        <p class="opacity-80 text-sm">Klik untuk mula transaksi.</p>
-                    </div>
-                    <i class="fas fa-cash-register absolute right-[-20px] bottom-[-20px] text-[12rem] opacity-10 rotate-12"></i>
+                <div onclick="loadModule('pos')" class="p-8 rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white relative overflow-hidden shadow-2xl cursor-pointer">
+                    <h2 class="text-2xl font-bold mb-1">Mula Jualan</h2>
+                    <p class="opacity-80 text-xs">Klik untuk buka Mini POS</p>
+                    <i class="fas fa-cash-register absolute right-[-10px] bottom-[-10px] text-7xl opacity-10"></i>
                 </div>
             </div>
         </div>
@@ -131,58 +107,40 @@
     <script>
         const SECURITY_CONFIG = { PIN: "1234", ALLOWED_DEVICE_ID: "KETICK-DEVICE-99" };
 
-        function checkDevice() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('register')) {
-                localStorage.setItem('ketick_device_id', SECURITY_CONFIG.ALLOWED_DEVICE_ID);
-                alert("Peranti Berhasil Didaftarkan!");
-                window.location.href = window.location.pathname; 
-            }
-            let deviceId = localStorage.getItem('ketick_device_id') || "UNKNOWN-DEVICE";
-            document.getElementById('device-id-label').innerHTML = `SIG: ${navigator.platform}<br>ID: ${deviceId}`;
-            return deviceId;
-        }
-
-        const inputs = document.querySelectorAll('.pin-input');
-        inputs.forEach((input, index) => {
-            input.addEventListener('input', () => { if (input.value && index < inputs.length - 1) inputs[index + 1].focus(); });
-            input.addEventListener('keydown', (e) => { if (e.key === 'Backspace' && !input.value && index > 0) inputs[index - 1].focus(); });
-        });
-
         function verifyAccess() {
             let enteredPin = "";
-            inputs.forEach(input => enteredPin += input.value);
-            const currentDevice = checkDevice();
+            document.querySelectorAll('.pin-input').forEach(i => enteredPin += i.value);
             if (enteredPin === SECURITY_CONFIG.PIN) {
-                if (currentDevice === SECURITY_CONFIG.ALLOWED_DEVICE_ID) {
-                    document.getElementById('security-overlay').style.display = 'none';
-                } else { alert("Peranti Tidak Sah!"); }
-            } else { alert("PIN Salah!"); inputs.forEach(i => i.value = ""); inputs[0].focus(); }
+                document.getElementById('security-overlay').style.display = 'none';
+            } else {
+                alert("PIN Salah!");
+                document.querySelectorAll('.pin-input').forEach(i => i.value = "");
+            }
         }
 
         function loadModule(name) {
-            const title = document.getElementById('moduleTitle');
-            const sub = document.getElementById('moduleSubtitle');
             const frame = document.getElementById('app-frame');
             const dashboard = document.getElementById('dashboard-view');
+            const title = document.getElementById('moduleTitle');
 
             title.innerText = name.toUpperCase();
-            
+
             if (name === 'dashboard') {
                 frame.classList.add('hidden');
                 dashboard.classList.remove('hidden');
-                sub.innerText = "Selamat datang semula.";
             } else {
-                sub.innerText = `Menjalankan modul ${name}...`;
-                // Pastikan folder /pos, /stock, /bank wujud di GitHub
+                // Sila pastikan anda ada folder /pos/index.html , /stock/index.html , dll.
                 frame.src = `./${name}/index.html`; 
                 frame.classList.remove('hidden');
                 dashboard.classList.add('hidden');
             }
         }
 
-        window.onload = checkDevice;
-        document.getElementById('themeToggle').addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+        // Auto focus input PIN
+        const inputs = document.querySelectorAll('.pin-input');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', () => { if (input.value && index < 3) inputs[index+1].focus(); });
+        });
     </script>
 </body>
 </html>
