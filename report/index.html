@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports | KETICK OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .bar { transition: height 1s ease-in-out; }
+    </style>
+</head>
+<body class="p-4 lg:p-8">
+
+    <div class="mb-8">
+        <h1 class="text-2xl font-extrabold tracking-tight">Laporan Jualan</h1>
+        <p class="text-slate-500 text-sm">Analisis prestasi KETICK OS anda.</p>
+    </div>
+
+    <div class="p-6 rounded-[2.5rem] glass border border-slate-800 mb-8">
+        <h3 class="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest">Jualan 7 Hari Terakhir</h3>
+        <div class="flex items-end justify-between h-40 gap-2 px-2">
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-full bg-blue-600/20 rounded-t-lg relative bar" style="height: 40%">
+                    <div class="absolute inset-0 bg-blue-500 rounded-t-lg opacity-50"></div>
+                </div>
+                <span class="text-[8px] mt-2 text-slate-500 uppercase">Isnin</span>
+            </div>
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-full bg-blue-600/20 rounded-t-lg relative bar" style="height: 65%">
+                    <div class="absolute inset-0 bg-blue-500 rounded-t-lg opacity-50"></div>
+                </div>
+                <span class="text-[8px] mt-2 text-slate-500 uppercase">Selasa</span>
+            </div>
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-full bg-blue-600/20 rounded-t-lg relative bar" style="height: 30%"></div>
+                <span class="text-[8px] mt-2 text-slate-500 uppercase">Rabu</span>
+            </div>
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-full bg-blue-600/20 rounded-t-lg relative bar" style="height: 85%">
+                    <div class="absolute inset-0 bg-blue-500 rounded-t-lg shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+                </div>
+                <span class="text-[8px] mt-2 text-blue-400 font-bold uppercase">Khamis</span>
+            </div>
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-full bg-blue-600/20 rounded-t-lg relative bar" style="height: 50%"></div>
+                <span class="text-[8px] mt-2 text-slate-500 uppercase">Jumaat</span>
+            </div>
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-full bg-emerald-500/20 rounded-t-lg relative bar" style="height: 95%">
+                    <div class="absolute inset-0 bg-emerald-500 rounded-t-lg opacity-50"></div>
+                </div>
+                <span class="text-[8px] mt-2 text-slate-500 uppercase">Sabtu</span>
+            </div>
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-full bg-emerald-500/20 rounded-t-lg relative bar" style="height: 90%">
+                    <div class="absolute inset-0 bg-emerald-500 rounded-t-lg opacity-50"></div>
+                </div>
+                <span class="text-[8px] mt-2 text-slate-500 uppercase">Ahad</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4">
+        <div class="p-6 rounded-3xl glass border border-slate-800">
+            <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest">Produk Paling Laku</h3>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-lg bg-blue-600/20 flex items-center justify-center text-blue-500 font-bold text-xs">1</span>
+                        <span class="text-sm font-semibold">Sneakers Pro White</span>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-500">42 Jualan</span>
+                </div>
+                <div class="flex justify-between items-center border-t border-slate-800/50 pt-4">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs">2</span>
+                        <span class="text-sm font-semibold">Formal Leather</span>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-500">28 Jualan</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8 p-6 rounded-3xl bg-blue-600/10 border border-blue-500/20 text-center">
+        <p class="text-xs text-blue-400">Semua data dikemaskini secara automatik berdasarkan transaksi Mini POS anda.</p>
+    </div>
+
+</body>
+</html>
