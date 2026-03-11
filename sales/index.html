@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Management | KETICK OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body class="p-4 lg:p-8">
+
+    <div class="mb-8">
+        <h1 class="text-2xl font-extrabold tracking-tight">Rekod Jualan</h1>
+        <p class="text-slate-500 text-sm italic">Pantau aliran tunai dan sejarah transaksi harian.</p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="glass p-5 rounded-[2rem] border-l-4 border-emerald-500">
+            <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Jualan Dipilih</p>
+            <h3 class="text-2xl font-black text-emerald-400" id="filter-total">RM 0.00</h3>
+        </div>
+        <div class="glass p-5 rounded-[2rem]">
+            <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Bil. Transaksi</p>
+            <h3 class="text-2xl font-black text-blue-500" id="filter-count">0</h3>
+        </div>
+    </div>
+
+    <div class="flex flex-wrap gap-3 mb-6">
+        <button onclick="fetchSales('today')" class="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-xl text-xs font-bold transition">Hari Ini</button>
+        <button onclick="fetchSales('yesterday')" class="glass hover:bg-white/10 px-5 py-2 rounded-xl text-xs font-bold transition">Semalam</button>
+        <button onclick="fetchSales('month')" class="glass hover:bg-white/10 px-5 py-2 rounded-xl text-xs font-bold transition">30 Hari</button>
+    </div>
+
+    <div class="overflow-x-auto rounded-3xl glass border border-slate-800">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-white/5 text-slate-400 text-[10px] uppercase tracking-widest">
+                <tr>
+                    <th class="p-5">Masa/ID</th>
+                    <th class="p-5">Butiran Item</th>
+                    <th class="p-5 text-right">Jumlah (RM)</th>
+                    <th class="p-5 text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody id="sales-table-body" class="text-sm divide-y divide-slate-800">
+                </tbody>
+        </table>
+    </div>
+
+    <script type="module">
+        import { db, collection, query, where, onSnapshot, orderBy } from "../firebase-config.js";
+
+        window.fetchSales = (period) => {
+            const tbody = document.getElementById('sales-table-body');
+            let q;
+            
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+
+            if (period === 'today') {
+                q = query(collection(db, "sales"), where("date", "==", todayStr), orderBy("timestamp", "desc"));
+            } else if (period === 'yesterday') {
+                const yesterday = new Date(now);
+                yesterday.setDate(now.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                q = query(collection(db, "sales"), where("date", "==", yesterdayStr), orderBy("timestamp", "desc"));
+            } else {
+                q = query(collection(db, "sales"), orderBy("timestamp", "desc"));
+            }
+
+            onSnapshot(q, (snapshot) => {
+                let totalRM = 0;
+                let count = 0;
+                
+                tbody.innerHTML = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    totalRM += parseFloat(data.totalPrice || 0);
+                    count++;
+                    
+                    return `
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="p-5">
+                                <div class="font-bold text-slate-200">${data.time || 'N/A'}</div>
+                                <div class="text-[10px] text-slate-500">ID: ...${doc.id.slice(-5)}</div>
+                            </td>
+                            <td class="p-5 text-slate-400">
+                                ${data.items ? data.items.map(i => i.name).join(', ') : 'Servis/Produk'}
+                            </td>
+                            <td class="p-5 text-right font-bold text-emerald-400">
+                                ${parseFloat(data.totalPrice).toFixed(2)}
+                            </td>
+                            <td class="p-5 text-center">
+                                <span class="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-bold">PAID</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                document.getElementById('filter-total').innerText = `RM ${totalRM.toFixed(2)}`;
+                document.getElementById('filter-count').innerText = count;
+            });
+        };
+
+        // Load jualan hari ini secara default
+        fetchSales('today');
+    </script>
+</body>
+</html>
