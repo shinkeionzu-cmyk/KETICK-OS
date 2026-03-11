@@ -142,3 +142,21 @@
     </script>
 </body>
 </html>
+function sendToWhatsApp(customerPhone, invoiceNo, totalAmount) {
+    const bizName = document.getElementById('bizName').value; // Ambil dari Firestore
+    const message = `Salam Sejahtera,
+    
+Terima kasih kerana memilih *${bizName}*. 
+
+Berikut adalah butiran invois anda:
+📌 *No. Invois:* #${invoiceNo}
+💰 *Jumlah:* RM ${totalAmount}
+
+Sila klik pautan di bawah untuk melihat/muat turun fail PDF invois anda:
+[Link PDF Anda Di Sini]
+
+Terima Kasih!`;
+
+    const encodedMsg = encodeURIComponent(message);
+    window.open(`https://wa.me/${customerPhone}?text=${encodedMsg}`, '_blank');
+}
