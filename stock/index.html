@@ -3,49 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Control | KETICK OS</title>
+    <title>Inventory | KETICK OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; min-height: 100vh; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        input[type="number"]::-webkit-inner-spin-button { display: none; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+        .modal.active { display: flex; }
     </style>
 </head>
 <body class="p-4 lg:p-8">
 
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-            <h1 class="text-2xl font-extrabold tracking-tight">Inventory Control</h1>
-            <p class="text-slate-500 text-sm">Urus baki stok kasut dan aksesori.</p>
+            <h1 class="text-2xl font-extrabold tracking-tight">Pengurusan Inventori</h1>
+            <p class="text-slate-500 text-sm">Urus produk, peralatan, atau perkhidmatan perniagaan.</p>
         </div>
-        <div class="flex gap-3">
-            <div class="glass px-4 py-2 rounded-2xl text-center">
-                <p class="text-[10px] text-slate-400 uppercase font-bold">Total Items</p>
-                <p class="text-xl font-bold text-blue-500" id="total-items">0</p>
-            </div>
-            <div class="glass px-4 py-2 rounded-2xl text-center border-l-4 border-l-red-500">
-                <p class="text-[10px] text-slate-400 uppercase font-bold">Low Stock</p>
-                <p class="text-xl font-bold text-red-500" id="low-stock-count">0</p>
-            </div>
+        <button onclick="toggleModal(true)" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition shadow-lg shadow-blue-600/20">
+            <i class="fas fa-plus"></i> Tambah Item
+        </button>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="glass p-5 rounded-[2rem]">
+            <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Jumlah Item</p>
+            <h3 class="text-2xl font-black text-blue-500" id="total-items">0</h3>
+        </div>
+        <div class="glass p-5 rounded-[2rem] border-l-4 border-l-red-500">
+            <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Stok Rendah</p>
+            <h3 class="text-2xl font-black text-red-500" id="low-stock-count">0</h3>
         </div>
     </div>
 
-    <div class="mb-6">
-        <div class="relative max-w-md">
-            <i class="fas fa-search absolute left-4 top-4 text-slate-500"></i>
-            <input type="text" id="searchInput" onkeyup="searchStock()" placeholder="Cari nama produk..." class="w-full p-4 pl-12 rounded-2xl glass border-none focus:ring-2 focus:ring-blue-600 outline-none">
-        </div>
+    <div class="mb-6 relative max-w-md">
+        <i class="fas fa-search absolute left-4 top-4 text-slate-500"></i>
+        <input type="text" id="searchInput" onkeyup="searchStock()" placeholder="Cari nama item..." class="w-full p-4 pl-12 rounded-2xl glass border-none focus:ring-2 focus:ring-blue-600 outline-none text-white">
     </div>
 
     <div class="overflow-x-auto rounded-3xl glass border border-slate-800">
         <table class="w-full text-left border-collapse">
-            <thead class="bg-white/5 text-slate-400 text-xs uppercase tracking-widest">
+            <thead class="bg-white/5 text-slate-400 text-[10px] uppercase tracking-widest">
                 <tr>
-                    <th class="p-5">Produk</th>
+                    <th class="p-5">Item/Produk</th>
                     <th class="p-5">Kategori</th>
-                    <th class="p-5 text-center">Baki Stok</th>
+                    <th class="p-5 text-center">Unit/Stok</th>
                     <th class="p-5">Status</th>
                     <th class="p-5 text-right">Tindakan</th>
                 </tr>
@@ -55,83 +58,107 @@
         </table>
     </div>
 
-        <script type="module">
-        // 1. Import fungsi yang diperlukan dari config awak kat luar
-        import { db, collection, onSnapshot, doc, updateDoc } from "../firebase-config.js";
+    <div id="addModal" class="modal">
+        <div class="glass w-full max-w-md p-8 rounded-[2.5rem] relative">
+            <h2 class="text-xl font-bold mb-6">Daftar Item Baru</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">Nama Item</label>
+                    <input type="text" id="newName" placeholder="Contoh: CCTV Dahua 2MP / Upah Pasang" class="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-blue-600 outline-none mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">Kategori</label>
+                    <select id="newCategory" class="w-full p-4 rounded-2xl bg-[#020617] border border-white/10 focus:ring-2 focus:ring-blue-600 outline-none mt-1 text-white">
+                        <option value="Produk">Produk Fizikal</option>
+                        <option value="Servis">Perkhidmatan/Servis</option>
+                        <option value="Hardware">Hardware/Alatan</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">Stok Awal</label>
+                    <input type="number" id="newStock" value="0" class="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-blue-600 outline-none mt-1">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button onclick="toggleModal(false)" class="flex-1 p-4 rounded-2xl hover:bg-white/5 font-bold transition">Batal</button>
+                    <button onclick="addItem()" class="flex-1 p-4 rounded-2xl bg-blue-600 hover:bg-blue-700 font-bold transition">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, collection, onSnapshot, doc, updateDoc, addDoc } from "../firebase-config.js";
 
         const tbody = document.getElementById('stock-table-body');
-        const totalItemsEl = document.getElementById('total-items');
-        const lowStockCountEl = document.getElementById('low-stock-count');
-
-        // 2. Ambil data real-time dari Cloud Firebase
+        
+        // Load Data Real-time
         onSnapshot(collection(db, "inventory"), (snapshot) => {
-            let lowStock = 0;
             let inventoryData = [];
+            let lowCount = 0;
             
             snapshot.forEach((doc) => {
                 inventoryData.push({ id: doc.id, ...doc.data() });
             });
 
-            // Update UI senarai kasut
             tbody.innerHTML = inventoryData.map(item => {
-                const minStock = 10; // Kita anggap baki 10 tu dah rendah
-                const isLow = item.stock <= minStock;
-                if (isLow) lowStock++;
-
-                let statusColor = "bg-emerald-500";
-                let statusText = "Stabil";
-                
-                if (item.stock <= 0) {
-                    statusColor = "bg-slate-500";
-                    statusText = "Habis";
-                } else if (isLow) {
-                    statusColor = "bg-red-500 animate-pulse";
-                    statusText = "Kritikal";
-                }
+                const isLow = item.stock <= 5;
+                if (isLow && item.category !== 'Servis') lowCount++;
 
                 return `
                     <tr class="hover:bg-white/5 transition-colors">
                         <td class="p-5 font-bold text-slate-100">${item.name}</td>
-                        <td class="p-5 text-slate-400">${item.category || 'Kasut'}</td>
-                        <td class="p-5 text-center">
-                            <span class="text-lg font-mono text-white">${item.stock}</span>
-                        </td>
+                        <td class="p-5"><span class="bg-white/5 px-3 py-1 rounded-lg text-xs text-slate-400">${item.category}</span></td>
+                        <td class="p-5 text-center font-mono text-lg">${item.stock}</td>
                         <td class="p-5">
-                            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase text-white ${statusColor}">
-                                ${statusText}
+                            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${item.stock > 5 ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500 animate-pulse'}">
+                                ${item.stock > 5 ? 'OK' : 'RENDAH'}
                             </span>
                         </td>
                         <td class="p-5 text-right">
                             <div class="flex justify-end gap-2">
-                                <button onclick="updateStock('${item.id}', ${item.stock - 1})" class="w-10 h-10 rounded-xl glass hover:bg-red-500/20 text-red-500 transition border border-white/5">
-                                    <i class="fas fa-minus text-xs"></i>
-                                </button>
-                                <button onclick="updateStock('${item.id}', ${item.stock + 1})" class="w-10 h-10 rounded-xl glass hover:bg-emerald-500/20 text-emerald-500 transition border border-white/5">
-                                    <i class="fas fa-plus text-xs"></i>
-                                </button>
+                                <button onclick="updateStock('${item.id}', ${item.stock - 1})" class="w-10 h-10 rounded-xl glass hover:bg-red-500/20 text-red-500 transition border border-white/5"><i class="fas fa-minus"></i></button>
+                                <button onclick="updateStock('${item.id}', ${item.stock + 1})" class="w-10 h-10 rounded-xl glass hover:bg-emerald-500/20 text-emerald-500 transition border border-white/5"><i class="fas fa-plus"></i></button>
                             </div>
                         </td>
                     </tr>
                 `;
             }).join('');
 
-            // Update statistik kat atas tu
-            totalItemsEl.innerText = inventoryData.length;
-            lowStockCountEl.innerText = lowStock;
+            document.getElementById('total-items').innerText = inventoryData.length;
+            document.getElementById('low-stock-count').innerText = lowCount;
         });
 
-        // 3. Fungsi untuk simpan baki baru ke Firebase bila butang ditekan
-        window.updateStock = async (id, newStock) => {
-            if (newStock < 0) return; // Takleh bagi stok negatif
+        // Add New Item Function
+        window.addItem = async () => {
+            const name = document.getElementById('newName').value;
+            const category = document.getElementById('newCategory').value;
+            const stock = parseInt(document.getElementById('newStock').value);
+
+            if (!name) return alert("Sila masukkan nama item!");
+
             try {
-                const itemRef = doc(db, "inventory", id);
-                await updateDoc(itemRef, { stock: newStock });
-            } catch (error) {
-                console.error("Gagal update stok:", error);
-            }
+                await addDoc(collection(db, "inventory"), {
+                    name: name,
+                    category: category,
+                    stock: stock,
+                    createdAt: new Date()
+                });
+                toggleModal(false);
+                // Clear input
+                document.getElementById('newName').value = "";
+                document.getElementById('newStock').value = "0";
+            } catch (e) { console.error("Error adding: ", e); }
         };
 
-        // Fungsi carian (Search)
+        window.updateStock = async (id, newStock) => {
+            if (newStock < 0) return;
+            await updateDoc(doc(db, "inventory", id), { stock: newStock });
+        };
+
+        window.toggleModal = (show) => {
+            document.getElementById('addModal').classList.toggle('active', show);
+        };
+
         window.searchStock = () => {
             const input = document.getElementById('searchInput').value.toLowerCase();
             const rows = document.querySelectorAll('#stock-table-body tr');
