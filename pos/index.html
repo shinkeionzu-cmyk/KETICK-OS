@@ -14,219 +14,161 @@
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-100 min-h-screen p-4 pb-32 lg:pb-4">
+<body class="bg-[#020617] text-slate-100 min-h-screen p-4 pb-32">
 
     <div class="flex justify-between items-center mb-6">
         <button onclick="window.location.href='../index.html'" class="p-3 rounded-xl glass hover:bg-slate-800">
             <i class="fas fa-arrow-left"></i>
         </button>
-        <h1 class="text-xl font-bold">Mini POS <span class="text-blue-500 text-xs">V1.0</span></h1>
-        <div class="p-3 rounded-xl glass text-emerald-500">
-            <i class="fas fa-circle text-[10px] animate-pulse"></i> Cloud Live
+        <h1 class="text-xl font-bold italic">KETICK <span class="text-blue-500">POS</span></h1>
+        <div class="p-3 rounded-xl glass text-emerald-500 text-xs font-bold">
+            <i class="fas fa-circle animate-pulse mr-1"></i> CLOUD LIVE
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         <div class="lg:col-span-2">
             <div class="mb-4 relative">
                 <i class="fas fa-search absolute left-4 top-4 text-slate-500"></i>
                 <input type="text" id="searchInput" onkeyup="searchProduct()" placeholder="Cari produk..." class="w-full p-4 pl-12 rounded-2xl glass border-none focus:ring-2 focus:ring-blue-600 outline-none">
             </div>
-
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="product-grid">
-                <p class="text-slate-500 p-10 col-span-full text-center">Memuatkan produk dari cloud...</p>
+                <p class="text-slate-500 p-10 col-span-full text-center">Menyambung ke database...</p>
             </div>
         </div>
 
         <div class="lg:col-span-1">
-            <div class="rounded-3xl glass p-6 sticky top-4 border border-blue-500/20 shadow-2xl shadow-blue-900/10">
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <i class="fas fa-shopping-cart text-blue-500"></i> Bakul
-                </h2>
-                
-                <div id="cart-items" class="space-y-4 max-h-[40vh] overflow-y-auto mb-6 pr-2">
-                    <p class="text-slate-500 text-center py-10 text-sm italic">Bakul kosong...</p>
+            <div class="rounded-3xl glass p-6 sticky top-4 border border-blue-500/20 shadow-2xl">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🛒 Bakul</h2>
+                <div id="cart-items" class="space-y-4 max-h-[40vh] overflow-y-auto mb-6 pr-2 italic text-slate-500 text-sm">
+                    Bakul kosong...
                 </div>
-
                 <div class="space-y-2 border-t border-slate-800 pt-4">
-                    <div class="flex justify-between text-sm text-slate-400">
-                        <span>Subtotal</span>
-                        <span id="subtotal">RM 0.00</span>
-                    </div>
                     <div class="flex justify-between text-xl font-bold text-white pt-2">
                         <span>TOTAL</span>
                         <span id="grand-total" class="text-blue-500">RM 0.00</span>
                     </div>
                 </div>
-
-                <button onclick="processPayment()" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-blue-600/30 transition-all active:scale-95">
+                <button onclick="processPayment()" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-4 rounded-2xl shadow-lg active:scale-95 transition-all">
                     BAYAR SEKARANG
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="receipt-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center z-[100] p-4">
-        <div class="bg-white text-black w-full max-w-sm p-8 rounded-none shadow-2xl font-mono relative">
-            <div class="text-center border-b border-dashed border-gray-300 pb-4 mb-4">
-                <h2 class="font-bold text-xl uppercase italic tracking-tighter">KETICK OS</h2>
-                <p class="text-[10px]">Digital Shoes & Services</p>
+    <div id="receipt-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+        <div class="bg-white text-black w-full max-w-sm p-8 font-mono shadow-2xl rounded-sm">
+            <div class="text-center border-b border-dashed border-gray-400 pb-4 mb-4">
+                <h2 class="font-bold text-xl uppercase italic">KETICK OS</h2>
                 <p class="text-[10px]" id="receipt-date"></p>
             </div>
             <div id="receipt-content" class="text-xs space-y-2 mb-4"></div>
-            <div class="border-t border-dashed border-gray-300 pt-4 text-right">
+            <div class="border-t border-dashed border-gray-400 pt-4 text-right">
                 <p class="font-bold text-lg">TOTAL: <span id="receipt-total"></span></p>
             </div>
-            <button onclick="closeReceipt()" class="w-full mt-6 bg-black text-white py-3 text-xs uppercase tracking-widest font-bold">Tutup & Reset</button>
+            <button onclick="closeReceipt()" class="w-full mt-6 bg-black text-white py-3 font-bold uppercase tracking-widest text-xs">Tutup & Reset</button>
         </div>
     </div>
 
     <script type="module">
-        import { db, collection, addDoc, updateDoc, doc, onSnapshot } from "../firebase-config.js";
+        import { db, collection, addDoc, updateDoc, doc, onSnapshot } from "/firebase-config.js";
 
         let products = [];
         let cart = [];
 
-        // 1. Ambil Data Produk dari Firestore secara Real-Time
-        const q = collection(db, "inventory");
-        onSnapshot(q, (snapshot) => {
+        // 1. Ambil Data Real-time
+        onSnapshot(collection(db, "inventory"), (snapshot) => {
             products = [];
-            snapshot.forEach((doc) => {
-                products.push({ id: doc.id, ...doc.data() });
-            });
+            snapshot.forEach((doc) => products.push({ id: doc.id, ...doc.data() }));
             renderProducts();
         });
 
-        // 2. Papar Produk ke Skrin
         function renderProducts() {
             const grid = document.getElementById('product-grid');
             grid.innerHTML = products.map(p => `
-                <div onclick="addToCart('${p.id}')" class="product-card p-6 rounded-3xl glass hover:bg-blue-600/10 cursor-pointer transition-all border border-slate-800">
+                <div onclick="addToCart('${p.id}')" class="product-card p-6 rounded-3xl glass hover:bg-blue-600/10 cursor-pointer border border-slate-800 transition-all">
                     <div class="text-4xl mb-3">${p.category === 'Kasut' ? '👟' : '🧼'}</div>
                     <h3 class="font-bold text-sm">${p.name}</h3>
-                    <p class="text-[10px] text-slate-500 mb-2 italic">Baki Stok: ${p.stock}</p>
+                    <p class="text-[10px] text-slate-500 mb-2 italic">Stok: ${p.stock}</p>
                     <p class="text-blue-500 font-bold">RM ${p.price.toFixed(2)}</p>
                 </div>
             `).join('');
         }
 
-        // 3. Tambah Item ke Bakul
         window.addToCart = function(id) {
             const product = products.find(p => p.id === id);
-            if (!product || product.stock <= 0) {
-                alert("Maaf, stok habis!");
-                return;
-            }
-
+            if (!product || product.stock <= 0) return alert("Stok Habis!");
+            
             const inCart = cart.find(item => item.id === id);
             if (inCart) {
-                if (inCart.qty < product.stock) {
-                    inCart.qty++;
-                } else {
-                    alert("Stok di kedai tidak mencukupi!");
-                }
+                if (inCart.qty < product.stock) inCart.qty++;
+                else alert("Stok Terhad!");
             } else {
                 cart.push({ ...product, qty: 1 });
             }
             updateUI();
         }
 
-        // 4. Buang Item dari Bakul
-        window.removeFromCart = function(id) {
-            cart = cart.filter(item => item.id !== id);
-            updateUI();
-        }
-
-        // 5. Kemaskini Interface Bakul
         window.updateUI = function() {
             const cartDiv = document.getElementById('cart-items');
             if (cart.length === 0) {
-                cartDiv.innerHTML = `<p class="text-slate-500 text-center py-10 text-sm italic">Bakul kosong...</p>`;
+                cartDiv.innerHTML = "Bakul kosong...";
             } else {
                 cartDiv.innerHTML = cart.map(item => `
-                    <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl border border-white/5">
+                    <div class="flex justify-between items-center bg-slate-900/40 p-3 rounded-xl border border-white/5 text-xs">
                         <div>
-                            <p class="font-bold text-sm">${item.name}</p>
-                            <p class="text-xs text-slate-500">RM ${item.price.toFixed(2)} x ${item.qty}</p>
+                            <p class="font-bold">${item.name}</p>
+                            <p class="text-slate-500">RM ${item.price.toFixed(2)} x ${item.qty}</p>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="font-bold text-sm text-blue-400">RM ${(item.price * item.qty).toFixed(2)}</span>
-                            <button onclick="removeFromCart('${item.id}')" class="text-red-500 hover:text-red-400 p-2">
-                                <i class="fas fa-trash text-xs"></i>
-                            </button>
-                        </div>
+                        <span class="font-bold text-blue-400 text-sm">RM ${(item.price * item.qty).toFixed(2)}</span>
                     </div>
                 `).join('');
             }
-
             const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            document.getElementById('subtotal').innerText = `RM ${total.toFixed(2)}`;
             document.getElementById('grand-total').innerText = `RM ${total.toFixed(2)}`;
         }
 
-        // 6. Proses Bayaran & Update Firestore
         window.processPayment = async function() {
-            if (cart.length === 0) return alert("Pilih barang dulu sebelum bayar!");
-            
+            if (cart.length === 0) return alert("Pilih barang dulu!");
             const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
             try {
-                // A. Simpan data jualan ke Firestore
+                // Simpan Jualan
                 await addDoc(collection(db, "sales"), {
-                    items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
+                    items: cart,
                     total: total,
-                    date: new Date().toISOString(),
                     timestamp: Date.now()
                 });
 
-                // B. Tolak baki stok secara automatik
+                // Tolak Stok
                 for (const item of cart) {
-                    const productRef = doc(db, "inventory", item.id);
-                    await updateDoc(productRef, {
+                    await updateDoc(doc(db, "inventory", item.id), {
                         stock: item.stock - item.qty
                     });
                 }
 
-                // C. Tunjuk Resit
-                showReceiptModal(total);
+                // Show Receipt
+                document.getElementById('receipt-date').innerText = new Date().toLocaleString();
+                document.getElementById('receipt-total').innerText = `RM ${total.toFixed(2)}`;
+                document.getElementById('receipt-content').innerHTML = cart.map(i => `
+                    <div class="flex justify-between italic"><span>${i.name} x${i.qty}</span><span>${(i.price*i.qty).toFixed(2)}</span></div>
+                `).join('');
+                document.getElementById('receipt-modal').style.display = 'flex';
 
-            } catch (error) {
-                console.error("Payment Error:", error);
-                alert("Gagal memproses bayaran. Sila periksa sambungan internet.");
-            }
-        };
-
-        function showReceiptModal(total) {
-            const date = new Date().toLocaleString('ms-MY');
-            document.getElementById('receipt-date').innerText = date;
-            document.getElementById('receipt-total').innerText = `RM ${total.toFixed(2)}`;
-            
-            const receiptContent = cart.map(item => `
-                <div class="flex justify-between italic">
-                    <span>${item.name} x${item.qty}</span>
-                    <span>RM ${(item.price * item.qty).toFixed(2)}</span>
-                </div>
-            `).join('');
-            
-            document.getElementById('receipt-content').innerHTML = receiptContent;
-            document.getElementById('receipt-modal').style.display = 'flex';
+            } catch (e) { alert("Ralat: " + e.message); }
         }
 
-        window.closeReceipt = function() {
+        window.closeReceipt = () => {
             cart = [];
             updateUI();
             document.getElementById('receipt-modal').style.display = 'none';
         }
 
-        // 7. Fungsi Carian Produk
-        window.searchProduct = function() {
+        window.searchProduct = () => {
             const term = document.getElementById('searchInput').value.toLowerCase();
-            const gridItems = document.querySelectorAll('#product-grid > div');
-            
-            gridItems.forEach(item => {
-                const name = item.querySelector('h3').innerText.toLowerCase();
-                item.style.display = name.includes(term) ? 'block' : 'none';
+            document.querySelectorAll('#product-grid > div').forEach(card => {
+                const name = card.querySelector('h3').innerText.toLowerCase();
+                card.style.display = name.includes(term) ? 'block' : 'none';
             });
         }
     </script>
