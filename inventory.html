@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory | KETICK OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-[#020617] text-slate-100 min-h-screen p-4 pb-24">
+
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-xl font-bold italic">STOR <span class="text-blue-500">KASUT</span></h1>
+        <button onclick="openModal()" class="bg-blue-600 px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-blue-900/20">
+            <i class="fas fa-plus mr-1"></i> TAMBAH
+        </button>
+    </div>
+
+    <div id="inventory-list" class="space-y-3">
+        <p class="text-slate-500 text-center py-10">Memuatkan stok...</p>
+    </div>
+
+    <div id="item-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm hidden items-center justify-center z-[100] p-6">
+        <div class="bg-[#0f172a] w-full max-w-md p-6 rounded-[32px] border border-slate-800 shadow-2xl">
+            <h2 id="modal-title" class="text-lg font-bold mb-4 text-blue-500 uppercase italic">Tambah Produk Baru</h2>
+            <div class="space-y-4 text-sm">
+                <div>
+                    <label class="text-slate-500 block mb-1">Nama Produk</label>
+                    <input type="text" id="itemName" class="w-full bg-[#1e293b] p-3 rounded-xl border-none focus:ring-2 focus:ring-blue-600 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-slate-500 block mb-1">Harga (RM)</label>
+                        <input type="number" id="itemPrice" class="w-full bg-[#1e293b] p-3 rounded-xl border-none focus:ring-2 focus:ring-blue-600 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block mb-1">Stok Awal</label>
+                        <input type="number" id="itemStock" class="w-full bg-[#1e293b] p-3 rounded-xl border-none focus:ring-2 focus:ring-blue-600 outline-none">
+                    </div>
+                </div>
+                <div class="flex gap-2 pt-4">
+                    <button onclick="closeModal()" class="flex-1 py-3 text-slate-400 font-bold">Batal</button>
+                    <button onclick="saveItem()" class="flex-[2] py-3 bg-blue-600 rounded-xl font-bold active:scale-95 transition-all">SIMPAN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, collection, addDoc, updateDoc, doc, onSnapshot, deleteDoc } from "/KETICK-OS/firebase-config.js";
+
+        let inventory = [];
+
+        // 1. Ambil Data Real-time
+        onSnapshot(collection(db, "inventory"), (snapshot) => {
+            inventory = [];
+            snapshot.forEach((doc) => inventory.push({ id: doc.id, ...doc.data() }));
+            render();
+        });
+
+        function render() {
+            const list = document.getElementById('inventory-list');
+            list.innerHTML = inventory.map(item => `
+                <div class="bg-[#0f172a] p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-sm text-white">${item.name}</h3>
+                        <p class="text-[10px] text-blue-400 font-bold">RM ${parseFloat(item.price).toFixed(2)}</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <p class="text-[9px] text-slate-500 uppercase">Baki Stok</p>
+                            <p class="font-bold ${item.stock < 5 ? 'text-red-500' : 'text-slate-300'}">${item.stock}</p>
+                        </div>
+                        <button onclick="updateStock('${item.id}', ${item.stock + 1})" class="p-2 text-blue-500"><i class="fas fa-plus-circle text-xl"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.openModal = () => document.getElementById('item-modal').style.display = 'flex';
+        window.closeModal = () => document.getElementById('item-modal').style.display = 'none';
+
+        window.saveItem = async () => {
+            const name = document.getElementById('itemName').value;
+            const price = parseFloat(document.getElementById('itemPrice').value);
+            const stock = parseInt(document.getElementById('itemStock').value);
+
+            if (!name || isNaN(price) || isNaN(stock)) return alert("Isi semua info!");
+
+            try {
+                await addDoc(collection(db, "inventory"), { name, price, stock, category: "Kasut" });
+                closeModal();
+                alert("Produk berjaya ditambah!");
+            } catch (e) { alert(e.message); }
+        };
+
+        window.updateStock = async (id, newStock) => {
+            await updateDoc(doc(db, "inventory", id), { stock: newStock });
+        };
+    </script>
+</body>
+</html>
