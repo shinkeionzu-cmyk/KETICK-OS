@@ -10,13 +10,12 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; background: #020617; color: white; }
         .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .glass-card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         
-        /* Mobile Bottom Nav */
+        /* Mobile Bottom Nav - Optimized for many items */
         .mobile-nav { 
             position: fixed; bottom: 0; left: 0; right: 0; 
             height: 70px; background: rgba(15, 23, 42, 0.95); 
-            backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.1); 
+            backdrop-filter: blur(10px); border-t: 1px solid rgba(255,255,255,0.1); 
             display: flex; justify-content: space-around; align-items: center; 
             z-index: 100; padding: 0 5px;
         }
@@ -29,9 +28,9 @@
         #security-overlay { position: fixed; inset: 0; z-index: 9999; background: #020617; display: flex; align-items: center; justify-content: center; }
         .pin-input { width: 55px; height: 65px; text-align: center; font-size: 24px; font-weight: 800; border-radius: 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
         
+        /* Sidebar Scroll */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         iframe { border: none; width: 100%; height: 100%; border-radius: 2rem 2rem 0 0; background: #020617; }
-        .btn-main:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -41,7 +40,7 @@
             <div class="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-blue-500/30">
                 <i class="fas fa-fingerprint text-2xl text-blue-500"></i>
             </div>
-            <h2 class="text-xl font-extrabold mb-6 italic">KETICK ACCESS</h2>
+            <h2 class="text-xl font-extrabold mb-6">KETICK ACCESS</h2>
             <div class="flex justify-center gap-3 mb-8">
                 <input type="password" maxlength="1" class="pin-input" autofocus>
                 <input type="password" maxlength="1" class="pin-input">
@@ -54,16 +53,29 @@
 
     <nav class="hidden lg:flex fixed top-0 left-0 w-72 h-screen glass border-r border-white/5 flex-col p-6 z-50">
         <div class="flex items-center gap-3 mb-10">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-black italic text-white">K</div>
-            <h1 class="font-extrabold text-lg tracking-tighter italic">KETICK OS <span class="text-[10px] text-blue-500">ERP</span></h1>
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-black">K</div>
+            <h1 class="font-extrabold text-lg tracking-tighter">KETICK OS <span class="text-[10px] text-blue-500">ERP</span></h1>
         </div>
+        
         <div class="flex-grow overflow-y-auto no-scrollbar space-y-1">
-            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest py-2">Menu Utama</p>
+            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest py-2">Utama</p>
             <button onclick="loadModule('dashboard')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-home w-6"></i> Dashboard</button>
             <button onclick="loadModule('pos')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-cash-register w-6"></i> Mini POS</button>
-            <button onclick="loadModule('inventory')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-boxes w-6"></i> Stok & Stor</button>
+            <button onclick="loadModule('products')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-tag w-6"></i> Products</button>
+            
+            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest py-2 mt-4">Operasi</p>
+            <button onclick="loadModule('stock')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-boxes w-6"></i> Stock Tracking</button>
+            <button onclick="loadModule('sales')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-shopping-cart w-6"></i> Sales Mgmt</button>
+            <button onclick="loadModule('purchase')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-truck-loading w-6"></i> Purchase Orders</button>
+            
             <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest py-2 mt-4">Kewangan</p>
+            <button onclick="loadModule('bank')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-university w-6"></i> Bank & Cash</button>
+            <button onclick="loadModule('accounting')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-file-invoice-dollar w-6"></i> Accounting</button>
             <button onclick="loadModule('my-invoice')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-file-signature w-6"></i> Invoicing</button>
+            
+            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest py-2 mt-4">CRM & Others</p>
+            <button onclick="loadModule('contact')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-users w-6"></i> Contacts</button>
+            <button onclick="loadModule('digital-shoes')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-cloud w-6"></i> Digital Shoes</button>
             <button onclick="loadModule('report')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-chart-pie w-6"></i> Reports</button>
         </div>
     </nav>
@@ -71,17 +83,30 @@
     <div class="mobile-nav lg:hidden">
         <button onclick="loadModule('dashboard')" class="nav-btn active"><i class="fas fa-th-large"></i><span>Home</span></button>
         <button onclick="loadModule('pos')" class="nav-btn"><i class="fas fa-cash-register"></i><span>POS</span></button>
-        <button onclick="loadModule('inventory')" class="nav-btn"><i class="fas fa-boxes"></i><span>Stock</span></button>
+        <button onclick="loadModule('products')" class="nav-btn"><i class="fas fa-tag"></i><span>Prod</span></button>
+        <button onclick="loadModule('stock')" class="nav-btn"><i class="fas fa-boxes"></i><span>Stock</span></button>
+        <button onclick="loadModule('bank')" class="nav-btn"><i class="fas fa-university"></i><span>Bank</span></button>
         <button onclick="toggleMoreMenu()" class="nav-btn"><i class="fas fa-ellipsis-h"></i><span>More</span></button>
+    </div>
+
+    <div id="more-menu" class="fixed inset-0 bg-[#020617]/90 z-[90] hidden p-10 backdrop-blur-xl">
+        <div class="grid grid-cols-3 gap-6 pt-20">
+            <div onclick="loadModule('accounting')" class="flex flex-col items-center gap-2"><div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-purple-500"><i class="fas fa-calculator"></i></div><span class="text-[10px] font-bold uppercase">Accounting</span></div>
+            <div onclick="loadModule('my-invoice')" class="flex flex-col items-center gap-2"><div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-emerald-500"><i class="fas fa-file-invoice"></i></div><span class="text-[10px] font-bold uppercase">Invoice</span></div>
+            <div onclick="loadModule('contact')" class="flex flex-col items-center gap-2"><div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-blue-500"><i class="fas fa-address-book"></i></div><span class="text-[10px] font-bold uppercase">Contacts</span></div>
+            <div onclick="loadModule('report')" class="flex flex-col items-center gap-2"><div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-pink-500"><i class="fas fa-chart-line"></i></div><span class="text-[10px] font-bold uppercase">Reports</span></div>
+            <div onclick="loadModule('digital-shoes')" class="flex flex-col items-center gap-2"><div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-amber-500"><i class="fas fa-cloud"></i></div><span class="text-[10px] font-bold uppercase">Digital</span></div>
+            <div onclick="toggleMoreMenu()" class="flex flex-col items-center gap-2"><div class="w-12 h-12 bg-red-500/20 rounded-2xl flex items-center justify-center text-red-500 border border-red-500/30"><i class="fas fa-times"></i></div><span class="text-[10px] font-bold uppercase">Tutup</span></div>
+        </div>
     </div>
 
     <main class="lg:ml-72 h-screen flex flex-col">
         <header class="p-6 flex justify-between items-center">
             <div>
-                <h2 id="moduleTitle" class="text-xl font-black uppercase tracking-tighter italic">DASHBOARD</h2>
-                <div class="flex items-center gap-2 mt-1">
+                <h2 id="moduleTitle" class="text-xl font-black uppercase tracking-tighter">DASHBOARD</h2>
+                <div id="status-dot" class="flex items-center gap-2 mt-1">
                     <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Cloud Active</span>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">System Online</span>
                 </div>
             </div>
             <img src="https://ui-avatars.com/api/?name=Admin&background=0D6EFD&color=fff" class="w-8 h-8 rounded-xl border border-white/10">
@@ -89,41 +114,25 @@
 
         <div class="flex-grow relative overflow-hidden">
             <iframe id="app-frame" class="hidden"></iframe>
-            
             <div id="dashboard-view" class="p-4 space-y-4 overflow-y-auto h-full pb-24">
-                <div class="p-8 rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-800 shadow-2xl relative overflow-hidden group btn-main" onclick="loadModule('pos')">
+                <div class="p-8 rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-800 shadow-2xl relative overflow-hidden group" onclick="loadModule('pos')">
                     <div class="relative z-10">
-                        <h2 class="text-2xl font-black mb-1 italic">Mula Jualan</h2>
-                        <p class="opacity-70 text-xs italic">Klik untuk lancarkan Terminal POS</p>
+                        <h2 class="text-2xl font-black mb-1">Mula Jualan</h2>
+                        <p class="opacity-70 text-xs">Klik untuk lancarkan Terminal POS</p>
                     </div>
-                    <i class="fas fa-bolt absolute right-[-10px] bottom-[-10px] text-9xl opacity-10 rotate-12"></i>
+                    <i class="fas fa-bolt absolute right-[-10px] bottom-[-10px] text-9xl opacity-10 rotate-12 group-hover:scale-110 transition-transform"></i>
                 </div>
                 
-                <div class="grid grid-cols-1 gap-4">
-                    <div class="btn-main glass-card p-6 rounded-[2rem] flex items-center justify-between group" onclick="loadModule('inventory')">
-                        <div class="flex items-center gap-5">
-                            <div class="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                <i class="fas fa-boxes-stacked text-2xl text-white"></i>
-                            </div>
-                            <div>
-                                <h2 class="font-bold text-lg">Stor & Stok</h2>
-                                <p class="text-slate-500 text-xs italic">Urus produk & baki</p>
-                            </div>
-                        </div>
-                        <i class="fas fa-chevron-right text-slate-700"></i>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-6 glass rounded-[2rem]" onclick="loadModule('stock')">
+                        <i class="fas fa-box text-blue-500 mb-3"></i>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase">Stok Kasut</p>
+                        <h4 class="text-lg font-bold">1,240 Unit</h4>
                     </div>
-
-                    <div class="btn-main glass-card p-6 rounded-[2rem] flex items-center justify-between opacity-50">
-                        <div class="flex items-center gap-5">
-                            <div class="w-14 h-14 bg-slate-700 rounded-2xl flex items-center justify-center">
-                                <i class="fas fa-chart-line text-2xl text-white"></i>
-                            </div>
-                            <div>
-                                <h2 class="font-bold text-lg italic text-white">Laporan Untung</h2>
-                                <p class="text-slate-500 text-[10px] uppercase">Coming Soon</p>
-                            </div>
-                        </div>
-                        <i class="fas fa-lock text-slate-700"></i>
+                    <div class="p-6 glass rounded-[2rem]" onclick="loadModule('report')">
+                        <i class="fas fa-chart-line text-emerald-500 mb-3"></i>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase">Jualan Hari Ini</p>
+                        <h4 class="text-lg font-bold">RM 450.00</h4>
                     </div>
                 </div>
             </div>
@@ -131,7 +140,6 @@
     </main>
 
     <script>
-        // KEKAL: PIN Verification
         function verifyAccess() {
             let pin = "";
             document.querySelectorAll('.pin-input').forEach(i => pin += i.value);
@@ -144,13 +152,20 @@
             }
         }
 
-        // KEKAL: Module Loader (Disesuaikan sikit)
+        function toggleMoreMenu() {
+            const menu = document.getElementById('more-menu');
+            menu.classList.toggle('hidden');
+        }
+
         function loadModule(name) {
             const frame = document.getElementById('app-frame');
             const dash = document.getElementById('dashboard-view');
+            const menu = document.getElementById('more-menu');
             
             document.getElementById('moduleTitle').innerText = name.replace('-', ' ');
+            menu.classList.add('hidden'); // Close more menu if open
 
+            // Handle active state for bottom nav
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(btn => btn.innerText.toLowerCase().includes(name.substring(0,3)));
             if (activeBtn) activeBtn.classList.add('active');
@@ -159,9 +174,7 @@
                 frame.classList.add('hidden');
                 dash.classList.remove('hidden');
             } else {
-                // Sini kita panggil fail .html yang kita buat tadi
-                // Kalau pos, dia buka /pos/index.html. Kalau inventory, dia buka inventory.html
-                frame.src = name === 'pos' ? `./pos/index.html` : `./${name}.html`;
+                frame.src = `./${name}/index.html`;
                 frame.classList.remove('hidden');
                 dash.classList.add('hidden');
             }
