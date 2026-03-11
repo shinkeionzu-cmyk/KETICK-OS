@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KETICK OS | Business Management System</title>
+    <title>KETICK OS | Premium Business Suite</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
         
+        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+        
+        /* Security Overlay */
         #security-overlay {
             position: fixed; inset: 0; z-index: 9999;
             background: #020617; display: flex; align-items: center;
@@ -22,23 +24,32 @@
             width: 50px; height: 60px; text-align: center;
             font-size: 24px; font-weight: bold; border-radius: 12px;
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
+            color: white; transition: all 0.3s;
         }
 
         .pin-input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
 
+        /* UI Effects */
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .v-badge { background: linear-gradient(90deg, #3b82f6, #8b5cf6); padding: 2px 8px; border-radius: 6px; font-size: 10px; text-transform: uppercase; font-weight: bold; }
+        
+        .v-badge {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            padding: 2px 8px; border-radius: 6px; font-size: 10px;
+            text-transform: uppercase; font-weight: bold;
+        }
+
+        iframe { transition: opacity 0.3s ease-in-out; }
     </style>
 </head>
 <body class="bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-all duration-500">
 
     <div id="security-overlay">
-        <div class="max-w-md w-full p-8 rounded-[2.5rem] glass border border-slate-800 text-center">
+        <div class="max-w-md w-full p-8 rounded-[2.5rem] glass border border-slate-800 text-center animate-fade-in">
             <div class="w-20 h-20 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-500/30">
                 <i class="fas fa-shield-alt text-3xl text-blue-500"></i>
             </div>
+            
             <h2 class="text-2xl font-bold mb-2">Security Verification</h2>
             <p class="text-slate-400 text-sm mb-8">Sila masukkan 4 digit PIN keselamatan.</p>
             
@@ -72,33 +83,62 @@
             </div>
 
             <div class="flex-grow overflow-y-auto no-scrollbar space-y-2">
-                <a href="#" onclick="loadModule('dashboard')" class="flex items-center gap-4 p-3 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
-                    <i class="fas fa-th-large w-5"></i> Dashboard
-                </a>
-                <a href="#" onclick="loadModule('pos')" class="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-all">
-                    <i class="fas fa-cash-register w-5 text-blue-500"></i> Mini POS
-                </a>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Utama</p>
+                <button onclick="loadModule('dashboard')" class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-all text-left">
+                    <i class="fas fa-th-large w-5 text-blue-500"></i> Dashboard
+                </button>
+                <button onclick="loadModule('pos')" class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-all text-left">
+                    <i class="fas fa-cash-register w-5 text-emerald-500"></i> Mini POS
+                </button>
+                <button onclick="loadModule('stock')" class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-all text-left">
+                    <i class="fas fa-boxes w-5 text-amber-500"></i> Stock
+                </button>
             </div>
 
             <div class="mt-auto pt-6 border-t border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <img src="https://ui-avatars.com/api/?name=Admin" class="w-8 h-8 rounded-full">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=random" class="w-8 h-8 rounded-full">
                     <span class="text-sm font-semibold">Admin</span>
                 </div>
-                <button id="themeToggle" class="p-2 rounded-lg bg-slate-800">🌓</button>
+                <button id="themeToggle" class="p-2 rounded-lg bg-slate-800 hover:scale-110 transition">🌓</button>
             </div>
+        </div>
+
+        <div class="flex lg:hidden justify-around items-center h-16">
+            <button onclick="loadModule('dashboard')" class="flex flex-col items-center text-blue-500"><i class="fas fa-home"></i><span class="text-[10px]">Home</span></button>
+            <button onclick="loadModule('pos')" class="flex flex-col items-center opacity-50"><i class="fas fa-cash-register"></i><span class="text-[10px]">POS</span></button>
+            <button onclick="loadModule('stock')" class="flex flex-col items-center opacity-50"><i class="fas fa-boxes"></i><span class="text-[10px]">Stock</span></button>
+            <button onclick="loadModule('backup')" class="flex flex-col items-center opacity-50"><i class="fas fa-sync"></i><span class="text-[10px]">Sync</span></button>
         </div>
     </nav>
 
-    <main class="lg:ml-72 min-h-screen p-4 lg:p-10 pb-24">
-        <header class="mb-10">
-            <h2 id="moduleTitle" class="text-3xl font-extrabold tracking-tight">Dashboard</h2>
-            <p class="text-slate-500 text-sm">Selamat datang ke KETICK OS.</p>
+    <main class="lg:ml-72 min-h-screen transition-all">
+        <header class="flex justify-between items-center p-6 lg:p-10 pb-0">
+            <div>
+                <h2 id="moduleTitle" class="text-3xl font-extrabold tracking-tight">Dashboard</h2>
+                <p id="moduleSubtitle" class="text-slate-500 text-sm">Selamat datang semula.</p>
+            </div>
         </header>
-        <div id="app-view" class="w-full h-full">
-            <div class="p-6 rounded-3xl glass border-l-4 border-l-blue-600">
-                <p class="text-slate-500 text-sm font-semibold">Jualan Kasut Digital</p>
-                <h3 class="text-2xl font-bold">RM 14,250.00</h3>
+
+        <div class="w-full h-[calc(100vh-140px)] p-4 lg:p-10">
+            <iframe id="app-frame" src="about:blank" class="w-full h-full border-none rounded-[2.5rem] shadow-2xl hidden bg-[#020617]"></iframe>
+            
+            <div id="dashboard-view" class="block space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="p-6 rounded-3xl glass border-l-4 border-l-blue-600 shadow-xl shadow-blue-900/5">
+                        <p class="text-slate-500 text-sm font-semibold mb-1">Jualan Kasut Digital</p>
+                        <h3 class="text-2xl font-bold">RM 14,250.00</h3>
+                        <span class="text-xs text-emerald-500 font-bold mt-2 inline-block">+12% Bulan ini</span>
+                    </div>
+                </div>
+                
+                <div onclick="loadModule('pos')" class="p-10 rounded-[3rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white relative overflow-hidden cursor-pointer hover:scale-[1.01] transition-all">
+                    <div class="relative z-10">
+                        <h2 class="text-3xl font-bold mb-2">Buka Mini POS</h2>
+                        <p class="opacity-80 max-w-md text-sm">Klik untuk mula transaksi jualan sekarang.</p>
+                    </div>
+                    <i class="fas fa-cash-register absolute right-[-20px] bottom-[-20px] text-[12rem] opacity-10 rotate-12"></i>
+                </div>
             </div>
         </div>
     </main>
@@ -109,27 +149,40 @@
             ALLOWED_DEVICE_ID: "KETICK-DEVICE-99"
         };
 
+        // 1. Device & URL Check
         function checkDevice() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('register')) {
+                localStorage.setItem('ketick_device_id', SECURITY_CONFIG.ALLOWED_DEVICE_ID);
+                alert("Peranti Berjaya Didaftarkan!");
+                window.location.href = window.location.pathname; 
+            }
+
             let deviceId = localStorage.getItem('ketick_device_id');
             if (!deviceId) deviceId = "UNKNOWN-DEVICE";
             document.getElementById('device-id-label').innerHTML = `SIG: ${navigator.platform}<br>ID: ${deviceId}`;
             return deviceId;
         }
 
+        // 2. PIN Logic
         const inputs = document.querySelectorAll('.pin-input');
         inputs.forEach((input, index) => {
             input.addEventListener('input', () => { if (input.value && index < inputs.length - 1) inputs[index + 1].focus(); });
             input.addEventListener('keydown', (e) => { if (e.key === 'Backspace' && !input.value && index > 0) inputs[index - 1].focus(); });
         });
 
+        // 3. Verify Access
         function verifyAccess() {
             let enteredPin = "";
             inputs.forEach(input => enteredPin += input.value);
             const currentDevice = checkDevice();
+
             if (enteredPin === SECURITY_CONFIG.PIN) {
                 if (currentDevice === SECURITY_CONFIG.ALLOWED_DEVICE_ID) {
                     document.getElementById('security-overlay').style.display = 'none';
-                } else { alert("Peranti Tidak Sah!"); }
+                } else {
+                    alert("Akses Disekat: Peranti Tidak Berdaftar!");
+                }
             } else {
                 alert("PIN Salah!");
                 inputs.forEach(input => input.value = "");
@@ -137,25 +190,34 @@
             }
         }
 
+        // 4. Module Loader (Iframe Logic)
         function loadModule(name) {
-            document.getElementById('moduleTitle').innerText = name.toUpperCase();
+            const title = document.getElementById('moduleTitle');
+            const sub = document.getElementById('moduleSubtitle');
+            const frame = document.getElementById('app-frame');
+            const dashboard = document.getElementById('dashboard-view');
+
+            title.innerText = name.toUpperCase();
+            
+            if (name === 'dashboard') {
+                frame.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                sub.innerText = "Selamat datang semula.";
+            } else {
+                sub.innerText = `Menjalankan modul ${name}...`;
+                // Pastikan folder /pos/index.html wujud di GitHub
+                frame.src = `./${name}/index.html`; 
+                frame.classList.remove('hidden');
+                dashboard.classList.add('hidden');
+            }
         }
 
-        // SEMAK PENDAFTARAN URL & DEVICE SEBAIK SAHAJA LOAD
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('register')) {
-                localStorage.setItem('ketick_device_id', 'KETICK-DEVICE-99');
-                alert("Peranti Berjaya Didaftarkan!");
-                window.location.href = window.location.pathname; 
-            }
-            checkDevice();
-        };
-
-        const themeToggle = document.getElementById('themeToggle');
-        themeToggle.addEventListener('click', () => {
+        // 5. Theme Toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
             document.documentElement.classList.toggle('dark');
         });
+
+        window.onload = checkDevice;
     </script>
 </body>
 </html>
