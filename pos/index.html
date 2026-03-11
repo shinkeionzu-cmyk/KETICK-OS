@@ -1,185 +1,204 @@
 <!DOCTYPE html>
-<html lang="ms" class="dark">
+<html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KETICK POS | Checkout</title>
+    <title>KETICK POS | Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; min-height: 100vh; overflow-x: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .product-card:active { transform: scale(0.96); background: rgba(59, 130, 246, 0.1); }
-        .method-card.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-        #payment-modal { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); }
-        #payment-modal.show { transform: translateY(0); }
+        .product-card:active { transform: scale(0.95); }
+        .active-method { border-color: #3b82f6 !important; background: rgba(59, 130, 246, 0.1) !important; color: #3b82f6; }
+        #cart-panel { transition: transform 0.4s ease; transform: translateX(100%); }
+        #cart-panel.show { transform: translateX(0); }
     </style>
 </head>
-<body class="p-4 pb-32">
+<body class="p-4">
 
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-blue-500 font-black tracking-tighter italic text-xl">KETICK <span class="text-white">POS</span></h1>
-            <p id="item-count" class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">0 Item Dipilih</p>
+            <h1 class="text-blue-500 font-black italic text-xl">KETICK <span class="text-white">POS</span></h1>
+            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Terminal Jualan</p>
         </div>
-        <button onclick="clearCart()" class="text-[10px] font-bold text-red-400 uppercase tracking-widest border border-red-500/20 px-3 py-2 rounded-xl">Reset</button>
+        <button onclick="toggleCart()" class="relative p-3 glass rounded-2xl border-white/10">
+            <i class="fas fa-shopping-cart text-blue-500"></i>
+            <span id="cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-[10px] w-5 h-5 rounded-full hidden items-center justify-center font-bold">0</span>
+        </button>
     </div>
 
-    <div id="product-list" class="grid grid-cols-2 gap-4">
+    <div id="product-grid" class="grid grid-cols-2 gap-4 pb-24">
         </div>
 
-    <div id="checkout-bar" class="fixed bottom-6 left-4 right-4 glass p-5 rounded-[2.5rem] flex justify-between items-center shadow-2xl border-blue-500/20 hidden">
+    <div id="floating-bar" class="fixed bottom-6 left-4 right-4 glass p-5 rounded-[2.5rem] flex justify-between items-center shadow-2xl border-blue-500/20 hidden">
         <div>
-            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
-            <h3 id="total-price" class="text-xl font-black text-emerald-400 tracking-tighter">RM 0.00</h3>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Jumlah Jualan</p>
+            <h3 id="bar-total" class="text-xl font-black text-emerald-400">RM 0.00</h3>
         </div>
-        <button onclick="openPayment()" class="bg-blue-600 text-white font-black px-8 py-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-blue-600/30">Bayar Now</button>
+        <button onclick="toggleCart()" class="bg-blue-600 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/30">Semak Troli</button>
     </div>
 
-    <div id="payment-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden" onclick="closePayment()"></div>
-    <div id="payment-modal" class="fixed bottom-0 left-0 right-0 glass rounded-t-[3rem] z-[110] p-8 border-t border-white/10">
-        <div class="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8"></div>
-        
-        <h2 class="text-center font-black text-xl mb-2 tracking-tighter">PEMBAYARAN</h2>
-        <p class="text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-8">Sila pilih cara bayaran</p>
-
-        <div class="grid grid-cols-3 gap-3 mb-8">
-            <div onclick="selectMethod('Cash', this)" class="method-card active glass p-4 rounded-2xl flex flex-col items-center gap-2 border border-white/5">
-                <i class="fas fa-money-bill-wave text-lg"></i>
-                <span class="text-[9px] font-bold uppercase">Tunai</span>
-            </div>
-            <div onclick="selectMethod('Online', this)" class="method-card glass p-4 rounded-2xl flex flex-col items-center gap-2 border border-white/5">
-                <i class="fas fa-mobile-alt text-lg"></i>
-                <span class="text-[9px] font-bold uppercase">Online</span>
-            </div>
-            <div onclick="selectMethod('Card', this)" class="method-card glass p-4 rounded-2xl flex flex-col items-center gap-2 border border-white/5">
-                <i class="fas fa-credit-card text-lg"></i>
-                <span class="text-[9px] font-bold uppercase">Kad</span>
-            </div>
+    <div id="cart-panel" class="fixed inset-0 z-[100] glass backdrop-blur-3xl p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-8">
+            <button onclick="toggleCart()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="font-black text-lg uppercase italic text-blue-500">Ringkasan Jualan</h2>
+            <div class="w-10"></div>
         </div>
 
-        <div class="space-y-3 mb-8 bg-white/5 p-6 rounded-3xl border border-white/5">
-            <div class="flex justify-between text-[11px] font-bold uppercase text-slate-400">
-                <span>Subtotal</span>
-                <span id="subtotal-val">RM 0.00</span>
+        <div id="cart-items" class="flex-grow overflow-y-auto space-y-4 pr-2">
             </div>
-            <div class="flex justify-between text-[11px] font-bold uppercase text-slate-400">
-                <span>Tax (0%)</span>
-                <span>RM 0.00</span>
-            </div>
-            <div class="pt-3 border-t border-white/10 flex justify-between text-lg font-black italic">
-                <span>TOTAL</span>
-                <span id="final-total" class="text-blue-500">RM 0.00</span>
-            </div>
-        </div>
 
-        <button onclick="processCheckout()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl text-[11px] uppercase tracking-[0.3em] shadow-xl shadow-blue-600/30">Sahkan Bayaran</button>
+        <div class="mt-6 pt-6 border-t border-white/10">
+            <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest text-center">Cara Bayaran</p>
+            <div class="grid grid-cols-3 gap-2 mb-6">
+                <button onclick="setMethod('Tunai', this)" class="pay-method active-method p-3 glass rounded-xl text-[10px] font-bold uppercase border border-white/5">Tunai</button>
+                <button onclick="setMethod('Online', this)" class="pay-method p-3 glass rounded-xl text-[10px] font-bold uppercase border border-white/5">Online</button>
+                <button onclick="setMethod('Kad', this)" class="pay-method p-3 glass rounded-xl text-[10px] font-bold uppercase border border-white/5">Kad</button>
+            </div>
+
+            <div class="glass p-5 rounded-3xl mb-6">
+                <div class="flex justify-between items-center text-lg font-black italic">
+                    <span>TOTAL</span>
+                    <span id="cart-total" class="text-emerald-400">RM 0.00</span>
+                </div>
+            </div>
+
+            <button onclick="confirmSale()" class="w-full bg-emerald-500 text-white font-black py-5 rounded-[2rem] text-xs uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20">Sahkan & Simpan</button>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Firebase Config (Sama seperti sebelum ini)
         const firebaseConfig = {
-          apiKey: "AIzaSyCT2nlX1fjiGvXAuaBWein6e1BQOOCH8ew",
-          authDomain: "ketick-os.firebaseapp.com",
-          projectId: "ketick-os",
-          storageBucket: "ketick-os.firebasestorage.app",
-          messagingSenderId: "407192673747",
-          appId: "1:407192673747:web:9196c8d72d77a642f02326"
+            apiKey: "AIzaSyCT2nlX1fjiGvXAuaBWein6e1BQOOCH8ew",
+            authDomain: "ketick-os.firebaseapp.com",
+            projectId: "ketick-os",
+            storageBucket: "ketick-os.firebasestorage.app",
+            messagingSenderId: "407192673747",
+            appId: "1:407192673747:web:9196c8d72d77a642f02326"
         };
-        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         let cart = [];
-        let selectedMethod = "Cash";
+        let method = "Tunai";
 
-        function loadProducts() {
-            db.collection("inventory").onSnapshot(snap => {
-                const list = document.getElementById('product-list');
-                list.innerHTML = "";
-                snap.forEach(doc => {
-                    const p = doc.data();
-                    list.innerHTML += `
-                        <div onclick="addToCart('${doc.id}', '${p.name}', ${p.price})" class="product-card glass p-5 rounded-[2.5rem] border border-white/5 relative overflow-hidden transition-all">
-                            <i class="fas fa-box text-blue-500/20 absolute -right-2 -bottom-2 text-5xl"></i>
-                            <h3 class="font-bold text-xs leading-tight mb-1 truncate uppercase">${p.name}</h3>
-                            <p class="text-blue-500 font-black text-sm tracking-tighter">RM ${parseFloat(p.price).toFixed(2)}</p>
-                            <p class="text-[8px] font-bold text-slate-600 mt-2 uppercase">Stok: ${p.stock || 0}</p>
-                        </div>
-                    `;
-                });
+        // Load Produk
+        db.collection("inventory").onSnapshot(snap => {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = "";
+            snap.forEach(doc => {
+                const p = doc.data();
+                grid.innerHTML += `
+                    <div onclick="addToCart('${doc.id}', '${p.name}', ${p.price})" class="product-card glass p-5 rounded-[2.5rem] border border-white/5">
+                        <div class="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center mb-4 text-blue-500"><i class="fas fa-tag"></i></div>
+                        <h3 class="font-bold text-xs uppercase truncate">${p.name}</h3>
+                        <p class="text-blue-500 font-black text-sm italic">RM ${parseFloat(p.price).toFixed(2)}</p>
+                        <p class="text-[8px] font-bold text-slate-600 mt-2 uppercase tracking-tighter">Baki: ${p.stock || 0}</p>
+                    </div>
+                `;
             });
-        }
+        });
 
         function addToCart(id, name, price) {
-            cart.push({ id, name, price });
+            const index = cart.findIndex(item => item.id === id);
+            if(index > -1) {
+                cart[index].qty += 1;
+            } else {
+                cart.push({ id, name, price, qty: 1 });
+            }
             updateUI();
         }
 
         function updateUI() {
-            const bar = document.getElementById('checkout-bar');
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
-            document.getElementById('total-price').innerText = `RM ${total.toFixed(2)}`;
-            document.getElementById('final-total').innerText = `RM ${total.toFixed(2)}`;
-            document.getElementById('subtotal-val').innerText = `RM ${total.toFixed(2)}`;
-            document.getElementById('item-count').innerText = `${cart.length} Item Dipilih`;
+            const list = document.getElementById('cart-items');
+            const badge = document.getElementById('cart-badge');
+            const bar = document.getElementById('floating-bar');
+            list.innerHTML = "";
+            let total = 0;
+
+            cart.forEach((item, i) => {
+                total += (item.price * item.qty);
+                list.innerHTML += `
+                    <div class="glass p-4 rounded-2xl flex justify-between items-center border border-white/5">
+                        <div>
+                            <p class="text-[10px] font-black uppercase text-blue-400">${item.name}</p>
+                            <p class="text-[9px] font-bold text-slate-500">RM ${item.price.toFixed(2)} x ${item.qty}</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="updateQty(${i}, -1)" class="w-7 h-7 bg-white/5 rounded-lg text-xs">-</button>
+                            <span class="text-xs font-bold">${item.qty}</span>
+                            <button onclick="updateQty(${i}, 1)" class="w-7 h-7 bg-white/5 rounded-lg text-xs">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cart-total').innerText = `RM ${total.toFixed(2)}`;
+            document.getElementById('bar-total').innerText = `RM ${total.toFixed(2)}`;
             
-            if(cart.length > 0) bar.classList.remove('hidden');
-            else bar.classList.add('hidden');
+            if(cart.length > 0) {
+                badge.innerText = cart.length;
+                badge.classList.replace('hidden', 'flex');
+                bar.classList.remove('hidden');
+            } else {
+                badge.classList.replace('flex', 'hidden');
+                bar.classList.add('hidden');
+            }
         }
 
-        function selectMethod(method, el) {
-            selectedMethod = method;
-            document.querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
+        function updateQty(index, change) {
+            cart[index].qty += change;
+            if(cart[index].qty <= 0) cart.splice(index, 1);
+            updateUI();
         }
 
-        function openPayment() {
-            document.getElementById('payment-overlay').classList.remove('hidden');
-            document.getElementById('payment-modal').classList.add('show');
+        function setMethod(m, btn) {
+            method = m;
+            document.querySelectorAll('.pay-method').forEach(b => b.classList.remove('active-method'));
+            btn.classList.add('active-method');
         }
 
-        function closePayment() {
-            document.getElementById('payment-overlay').classList.add('hidden');
-            document.getElementById('payment-modal').classList.remove('show');
+        function toggleCart() {
+            document.getElementById('cart-panel').classList.toggle('show');
         }
 
-        function clearCart() { cart = []; updateUI(); }
-
-        async function processCheckout() {
+        async function confirmSale() {
             if(cart.length === 0) return;
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
             
-            const saleData = {
-                items: cart,
-                totalPrice: total,
-                paymentMethod: selectedMethod,
-                date: new Date().toISOString().split('T')[0],
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
             try {
-                await db.collection("sales").add(saleData);
-                // Tolak stok
+                // 1. Simpan Sales
+                await db.collection("sales").add({
+                    items: cart,
+                    totalValue: total,
+                    paymentMethod: method,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    date: new Date().toISOString().split('T')[0]
+                });
+
+                // 2. Tolak Stok
                 for(let item of cart) {
                     const ref = db.collection("inventory").doc(item.id);
                     await db.runTransaction(async (t) => {
                         const doc = await t.get(ref);
-                        const newStock = (doc.data().stock || 0) - 1;
-                        t.update(ref, { stock: Math.max(0, newStock) });
+                        const currentStock = doc.data().stock || 0;
+                        t.update(ref, { stock: Math.max(0, currentStock - item.qty) });
                     });
                 }
-                alert(`Bayaran RM ${total.toFixed(2)} (${selectedMethod}) Berjaya!`);
+
+                alert("Jualan Berjaya Disimpan!");
                 cart = [];
                 updateUI();
-                closePayment();
-            } catch (e) { alert("Ralat!"); }
+                toggleCart();
+            } catch(e) {
+                alert("Masalah Simpan Jualan: " + e.message);
+            }
         }
-
-        loadProducts();
     </script>
 </body>
 </html>
