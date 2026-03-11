@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products | KETICK OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; padding-bottom: 40px; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .product-card { border-radius: 1.5rem; transition: transform 0.2s; }
+        .product-card:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="p-4">
+
+    <div class="mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-xl font-black uppercase tracking-tight">Products</h1>
+            <button onclick="openAddModal()" class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/40">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+        <div class="relative">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="text" placeholder="Cari kasut atau kod..." class="w-full bg-slate-900 border border-slate-800 p-3 pl-10 rounded-xl text-sm outline-none focus:border-blue-500">
+        </div>
+    </div>
+
+    <div class="flex gap-2 mb-6 overflow-x-auto no-scrollbar pb-2">
+        <button class="px-4 py-2 bg-blue-600 rounded-lg text-[10px] font-bold uppercase whitespace-nowrap">Semua</button>
+        <button class="px-4 py-2 glass rounded-lg text-[10px] font-bold uppercase whitespace-nowrap opacity-60">Sneakers</button>
+        <button class="px-4 py-2 glass rounded-lg text-[10px] font-bold uppercase whitespace-nowrap opacity-60">Formal</button>
+        <button class="px-4 py-2 glass rounded-lg text-[10px] font-bold uppercase whitespace-nowrap opacity-60">Servis</button>
+    </div>
+
+    <div class="space-y-3" id="product-list">
+        <div class="glass p-4 product-card flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-blue-500">
+                    <i class="fas fa-shoe-prints"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-bold">Sneaker Alpha v1</p>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase">SKU: SK-001</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-black text-emerald-500">RM 199.00</p>
+                <div class="flex gap-1 justify-end mt-1">
+                    <button class="text-[10px] text-blue-400"><i class="fas fa-edit"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass p-4 product-card flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-amber-500">
+                    <i class="fas fa-magic"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-bold">Deep Cleaning Service</p>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase">SKU: SRV-01</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-black text-emerald-500">RM 50.00</p>
+                <div class="flex gap-1 justify-end mt-1">
+                    <button class="text-[10px] text-blue-400"><i class="fas fa-edit"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openAddModal() {
+            alert("Fungsi Tambah Produk akan dihubungkan ke Firebase sebentar lagi.");
+        }
+    </script>
+</body>
+</html>
