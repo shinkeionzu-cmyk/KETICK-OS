@@ -1,84 +1,176 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="ms" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ketick OS | Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KETICK OS | ERP System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; }
-        .glass-card { 
-            background: rgba(30, 41, 59, 0.5); 
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255, 255, 255, 0.05); 
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; background: #020617; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass-card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        
+        /* Mobile Bottom Nav */
+        .mobile-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            height: 70px; background: rgba(15, 23, 42, 0.95); 
+            backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.1); 
+            display: flex; justify-content: space-around; align-items: center; 
+            z-index: 100; padding: 0 5px;
         }
+        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; color: #64748b; background: none; border: none; outline: none !important; }
+        .nav-btn i { font-size: 1.1rem; }
+        .nav-btn span { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .nav-btn.active { color: #3b82f6; }
+
+        /* Security Overlay */
+        #security-overlay { position: fixed; inset: 0; z-index: 9999; background: #020617; display: flex; align-items: center; justify-content: center; }
+        .pin-input { width: 55px; height: 65px; text-align: center; font-size: 24px; font-weight: 800; border-radius: 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        iframe { border: none; width: 100%; height: 100%; border-radius: 2rem 2rem 0 0; background: #020617; }
         .btn-main:active { transform: scale(0.95); }
     </style>
 </head>
-<body class="text-slate-200 min-h-screen flex flex-col p-6">
+<body>
 
-    <div class="mt-8 mb-10">
-        <p class="text-blue-500 font-bold tracking-widest text-xs uppercase mb-1">Selamat Datang</p>
-        <h1 class="text-3xl font-extrabold tracking-tighter italic">KETICK <span class="text-blue-600">OS</span></h1>
-        <p class="text-slate-500 text-sm mt-1">Sistem Pengurusan Bisnes Kasut Digital</p>
-    </div>
-
-    <div class="grid grid-cols-1 gap-4">
-        
-        <a href="pos/index.html" class="btn-main glass-card p-6 rounded-[2rem] flex items-center justify-between group hover:border-blue-500/50 transition-all">
-            <div class="flex items-center gap-5">
-                <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/40">
-                    <i class="fas fa-cash-register text-2xl text-white"></i>
-                </div>
-                <div>
-                    <h2 class="font-bold text-lg group-hover:text-blue-400 transition-colors">Kaunter Jualan</h2>
-                    <p class="text-slate-500 text-xs">Rekod jualan & cetak resit</p>
-                </div>
+    <div id="security-overlay">
+        <div class="max-w-xs w-full p-8 rounded-[2.5rem] glass text-center">
+            <div class="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-blue-500/30">
+                <i class="fas fa-fingerprint text-2xl text-blue-500"></i>
             </div>
-            <i class="fas fa-chevron-right text-slate-700"></i>
-        </a>
-
-        <a href="inventory.html" class="btn-main glass-card p-6 rounded-[2rem] flex items-center justify-between group hover:border-emerald-500/50 transition-all">
-            <div class="flex items-center gap-5">
-                <div class="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-900/40">
-                    <i class="fas fa-boxes-stacked text-2xl text-white"></i>
-                </div>
-                <div>
-                    <h2 class="font-bold text-lg group-hover:text-emerald-400 transition-colors">Stor & Stok</h2>
-                    <p class="text-slate-500 text-xs">Urus produk & baki stok</p>
-                </div>
+            <h2 class="text-xl font-extrabold mb-6 italic">KETICK ACCESS</h2>
+            <div class="flex justify-center gap-3 mb-8">
+                <input type="password" maxlength="1" class="pin-input" autofocus>
+                <input type="password" maxlength="1" class="pin-input">
+                <input type="password" maxlength="1" class="pin-input">
+                <input type="password" maxlength="1" class="pin-input">
             </div>
-            <i class="fas fa-chevron-right text-slate-700"></i>
-        </a>
-
-        <div class="glass-card p-6 rounded-[2rem] flex items-center justify-between opacity-50">
-            <div class="flex items-center gap-5">
-                <div class="w-14 h-14 bg-slate-700 rounded-2xl flex items-center justify-center">
-                    <i class="fas fa-chart-line text-2xl text-white"></i>
-                </div>
-                <div>
-                    <h2 class="font-bold text-lg italic">Laporan Untung</h2>
-                    <p class="text-slate-500 text-[10px] uppercase tracking-tighter">Akan Datang</p>
-                </div>
-            </div>
-            <i class="fas fa-lock text-slate-700"></i>
-        </div>
-
-    </div>
-
-    <div class="mt-auto pt-10">
-        <div class="glass-card p-5 rounded-3xl border-dashed border-slate-800">
-            <div class="flex justify-between items-center">
-                <span class="text-xs text-slate-500 font-bold uppercase tracking-widest">Status Cloud</span>
-                <span class="flex items-center gap-2 text-emerald-500 text-[10px] font-bold">
-                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
-                    BERHUBUNG
-                </span>
-            </div>
+            <button onclick="verifyAccess()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-blue-600/20 uppercase tracking-widest text-xs">Authorize</button>
         </div>
     </div>
 
+    <nav class="hidden lg:flex fixed top-0 left-0 w-72 h-screen glass border-r border-white/5 flex-col p-6 z-50">
+        <div class="flex items-center gap-3 mb-10">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-black italic text-white">K</div>
+            <h1 class="font-extrabold text-lg tracking-tighter italic">KETICK OS <span class="text-[10px] text-blue-500">ERP</span></h1>
+        </div>
+        <div class="flex-grow overflow-y-auto no-scrollbar space-y-1">
+            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest py-2">Menu Utama</p>
+            <button onclick="loadModule('dashboard')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-home w-6"></i> Dashboard</button>
+            <button onclick="loadModule('pos')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-cash-register w-6"></i> Mini POS</button>
+            <button onclick="loadModule('inventory')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-boxes w-6"></i> Stok & Stor</button>
+            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest py-2 mt-4">Kewangan</p>
+            <button onclick="loadModule('my-invoice')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-file-signature w-6"></i> Invoicing</button>
+            <button onclick="loadModule('report')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-chart-pie w-6"></i> Reports</button>
+        </div>
+    </nav>
+
+    <div class="mobile-nav lg:hidden">
+        <button onclick="loadModule('dashboard')" class="nav-btn active"><i class="fas fa-th-large"></i><span>Home</span></button>
+        <button onclick="loadModule('pos')" class="nav-btn"><i class="fas fa-cash-register"></i><span>POS</span></button>
+        <button onclick="loadModule('inventory')" class="nav-btn"><i class="fas fa-boxes"></i><span>Stock</span></button>
+        <button onclick="toggleMoreMenu()" class="nav-btn"><i class="fas fa-ellipsis-h"></i><span>More</span></button>
+    </div>
+
+    <main class="lg:ml-72 h-screen flex flex-col">
+        <header class="p-6 flex justify-between items-center">
+            <div>
+                <h2 id="moduleTitle" class="text-xl font-black uppercase tracking-tighter italic">DASHBOARD</h2>
+                <div class="flex items-center gap-2 mt-1">
+                    <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Cloud Active</span>
+                </div>
+            </div>
+            <img src="https://ui-avatars.com/api/?name=Admin&background=0D6EFD&color=fff" class="w-8 h-8 rounded-xl border border-white/10">
+        </header>
+
+        <div class="flex-grow relative overflow-hidden">
+            <iframe id="app-frame" class="hidden"></iframe>
+            
+            <div id="dashboard-view" class="p-4 space-y-4 overflow-y-auto h-full pb-24">
+                <div class="p-8 rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-800 shadow-2xl relative overflow-hidden group btn-main" onclick="loadModule('pos')">
+                    <div class="relative z-10">
+                        <h2 class="text-2xl font-black mb-1 italic">Mula Jualan</h2>
+                        <p class="opacity-70 text-xs italic">Klik untuk lancarkan Terminal POS</p>
+                    </div>
+                    <i class="fas fa-bolt absolute right-[-10px] bottom-[-10px] text-9xl opacity-10 rotate-12"></i>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="btn-main glass-card p-6 rounded-[2rem] flex items-center justify-between group" onclick="loadModule('inventory')">
+                        <div class="flex items-center gap-5">
+                            <div class="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <i class="fas fa-boxes-stacked text-2xl text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-lg">Stor & Stok</h2>
+                                <p class="text-slate-500 text-xs italic">Urus produk & baki</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-slate-700"></i>
+                    </div>
+
+                    <div class="btn-main glass-card p-6 rounded-[2rem] flex items-center justify-between opacity-50">
+                        <div class="flex items-center gap-5">
+                            <div class="w-14 h-14 bg-slate-700 rounded-2xl flex items-center justify-center">
+                                <i class="fas fa-chart-line text-2xl text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-lg italic text-white">Laporan Untung</h2>
+                                <p class="text-slate-500 text-[10px] uppercase">Coming Soon</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-lock text-slate-700"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // KEKAL: PIN Verification
+        function verifyAccess() {
+            let pin = "";
+            document.querySelectorAll('.pin-input').forEach(i => pin += i.value);
+            if (pin === "1234") {
+                document.getElementById('security-overlay').style.display = 'none';
+            } else {
+                alert("PIN SALAH!");
+                document.querySelectorAll('.pin-input').forEach(i => i.value = "");
+                document.querySelectorAll('.pin-input')[0].focus();
+            }
+        }
+
+        // KEKAL: Module Loader (Disesuaikan sikit)
+        function loadModule(name) {
+            const frame = document.getElementById('app-frame');
+            const dash = document.getElementById('dashboard-view');
+            
+            document.getElementById('moduleTitle').innerText = name.replace('-', ' ');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(btn => btn.innerText.toLowerCase().includes(name.substring(0,3)));
+            if (activeBtn) activeBtn.classList.add('active');
+
+            if (name === 'dashboard') {
+                frame.classList.add('hidden');
+                dash.classList.remove('hidden');
+            } else {
+                // Sini kita panggil fail .html yang kita buat tadi
+                // Kalau pos, dia buka /pos/index.html. Kalau inventory, dia buka inventory.html
+                frame.src = name === 'pos' ? `./pos/index.html` : `./${name}.html`;
+                frame.classList.remove('hidden');
+                dash.classList.add('hidden');
+            }
+        }
+
+        const inputs = document.querySelectorAll('.pin-input');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', () => { if (input.value && index < 3) inputs[index+1].focus(); });
+        });
+    </script>
 </body>
 </html>
