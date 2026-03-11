@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting | KETICK OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .card-income { border-top: 4px solid #10b981; }
+        .card-expense { border-top: 4px solid #ef4444; }
+    </style>
+</head>
+<body class="p-4 lg:p-8">
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="p-6 rounded-3xl glass card-income shadow-xl shadow-emerald-900/5">
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Total Income</p>
+            <h3 class="text-2xl font-black text-emerald-500" id="total-income">RM 0.00</h3>
+            <p class="text-[10px] text-slate-400 mt-2">Bulan Mac 2026</p>
+        </div>
+        <div class="p-6 rounded-3xl glass card-expense shadow-xl shadow-red-900/5">
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Total Expenses</p>
+            <h3 class="text-2xl font-black text-red-500" id="total-expenses">RM 0.00</h3>
+            <p class="text-[10px] text-slate-400 mt-2">Bil Elektrik, Sewa, Stok</p>
+        </div>
+        <div class="p-6 rounded-3xl glass border-t-4 border-t-blue-600 shadow-xl shadow-blue-900/5">
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Net Profit</p>
+            <h3 class="text-2xl font-black text-blue-500" id="net-profit">RM 0.00</h3>
+            <p class="text-[10px] text-slate-400 mt-2">Untung Bersih</p>
+        </div>
+    </div>
+
+    <div class="mb-8 p-6 rounded-3xl glass border border-slate-800">
+        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+            <i class="fas fa-plus-circle text-blue-500"></i> Rekod Transaksi Baru
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <input type="text" id="desc" placeholder="Keterangan (cth: Jualan Kasut)" class="p-3 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:ring-1 focus:ring-blue-600">
+            <input type="number" id="amount" placeholder="Jumlah (RM)" class="p-3 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:ring-1 focus:ring-blue-600">
+            <select id="type" class="p-3 rounded-xl bg-slate-900 border border-slate-800 outline-none">
+                <option value="income">Pendapatan (+)</option>
+                <option value="expense">Perbelanjaan (-)</option>
+            </select>
+            <button onclick="addTransaction()" class="bg-blue-600 hover:bg-blue-700 p-3 rounded-xl font-bold transition">SIMPAN</button>
+        </div>
+    </div>
+
+    <div class="rounded-3xl glass border border-slate-800 overflow-hidden">
+        <div class="p-5 border-b border-slate-800 flex justify-between items-center">
+            <h2 class="font-bold uppercase text-xs tracking-widest">Sejarah Transaksi</h2>
+            <button onclick="clearHistory()" class="text-[10px] text-red-500 hover:underline">Padam Semua</button>
+        </div>
+        <div id="transaction-list" class="divide-y divide-slate-800 max-h-[400px] overflow-y-auto">
+            </div>
+    </div>
+
+    <script>
+        let transactions = JSON.parse(localStorage.getItem('ketick_tx')) || [
+            { id: 1, desc: "Baki Awal", amount: 1000, type: "income", date: "2026-03-01" }
+        ];
+
+        function renderAccounting() {
+            const list = document.getElementById('transaction-list');
+            let income = 0;
+            let expense = 0;
+
+            list.innerHTML = transactions.map(tx => {
+                if(tx.type === 'income') income += parseFloat(tx.amount);
+                else expense += parseFloat(tx.amount);
+
+                return `
+                    <div class="p-4 flex justify-between items-center hover:bg-white/5 transition">
+                        <div>
+                            <p class="font-bold text-sm">${tx.desc}</p>
+                            <p class="text-[10px] text-slate-500">${tx.date}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold ${tx.type === 'income' ? 'text-emerald-500' : 'text-red-500'}">
+                                ${tx.type === 'income' ? '+' : '-'} RM ${parseFloat(tx.amount).toFixed(2)}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }).reverse().join('');
+
+            document.getElementById('total-income').innerText = `RM ${income.toFixed(2)}`;
+            document.getElementById('total-expenses').innerText = `RM ${expense.toFixed(2)}`;
+            document.getElementById('net-profit').innerText = `RM ${(income - expense).toFixed(2)}`;
+            
+            localStorage.setItem('ketick_tx', JSON.stringify(transactions));
+        }
+
+        function addTransaction() {
+            const desc = document.getElementById('desc').value;
+            const amount = document.getElementById('amount').value;
+            const type = document.getElementById('type').value;
+            
+            if(!desc || !amount) return alert("Sila isi maklumat!");
+
+            transactions.push({
+                id: Date.now(),
+                desc: desc,
+                amount: amount,
+                type: type,
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            document.getElementById('desc').value = '';
+            document.getElementById('amount').value = '';
+            renderAccounting();
+        }
+
+        function clearHistory() {
+            if(confirm("Padam sejarah transaksi?")) {
+                transactions = [];
+                renderAccounting();
+            }
+        }
+
+        window.onload = renderAccounting;
+    </script>
+</body>
+</html>
