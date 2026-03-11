@@ -2,188 +2,171 @@
 <html lang="ms" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KETICK OS | ERP System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory | KETICK OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; background: #020617; color: white; }
-        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        
-        /* Mobile Bottom Nav - Optimized for many items */
-        .mobile-nav { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            height: 70px; background: rgba(15, 23, 42, 0.95); 
-            backdrop-filter: blur(10px); border-t: 1px solid rgba(255,255,255,0.1); 
-            display: flex; justify-content: space-around; align-items: center; 
-            z-index: 100; padding: 0 5px;
-        }
-        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; color: #64748b; background: none; border: none; outline: none !important; }
-        .nav-btn i { font-size: 1.1rem; }
-        .nav-btn span { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-        .nav-btn.active { color: #3b82f6; }
-
-        /* Security Overlay */
-        #security-overlay { position: fixed; inset: 0; z-index: 9999; background: #020617; display: flex; align-items: center; justify-content: center; }
-        .pin-input { width: 55px; height: 65px; text-align: center; font-size: 24px; font-weight: 800; border-radius: 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
-        
-        /* Sidebar Scroll */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        iframe { border: none; width: 100%; height: 100%; border-radius: 2rem 2rem 0 0; background: #020617; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+        .modal.active { display: flex; }
     </style>
 </head>
-<body>
+<body class="p-4 lg:p-8">
 
-    <div id="security-overlay">
-        <div class="max-w-xs w-full p-8 rounded-[2.5rem] glass text-center">
-            <div class="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-blue-500/30">
-                <i class="fas fa-fingerprint text-2xl text-blue-500"></i>
-            </div>
-            <h2 class="text-xl font-extrabold mb-6">KETICK ACCESS</h2>
-            <div class="flex justify-center gap-3 mb-8">
-                <input type="password" maxlength="1" class="pin-input" autofocus>
-                <input type="password" maxlength="1" class="pin-input">
-                <input type="password" maxlength="1" class="pin-input">
-                <input type="password" maxlength="1" class="pin-input">
-            </div>
-            <button onclick="verifyAccess()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-blue-600/20 uppercase tracking-widest text-xs">Authorize</button>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-extrabold tracking-tight">Pengurusan Inventori</h1>
+            <p class="text-slate-500 text-sm">Urus produk, peralatan, atau perkhidmatan perniagaan.</p>
+        </div>
+        <button onclick="toggleModal(true)" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition shadow-lg shadow-blue-600/20">
+            <i class="fas fa-plus"></i> Tambah Item
+        </button>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="glass p-5 rounded-[2rem]">
+            <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Jumlah Item</p>
+            <h3 class="text-2xl font-black text-blue-500" id="total-items">0</h3>
+        </div>
+        <div class="glass p-5 rounded-[2rem] border-l-4 border-l-red-500">
+            <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Stok Rendah</p>
+            <h3 class="text-2xl font-black text-red-500" id="low-stock-count">0</h3>
         </div>
     </div>
 
-    <nav class="hidden lg:flex fixed top-0 left-0 w-72 h-screen glass border-r border-white/5 flex-col p-6 z-50">
-        <div class="flex items-center gap-3 mb-10">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-black">K</div>
-            <h1 class="font-extrabold text-lg tracking-tighter">KETICK OS <span class="text-[10px] text-blue-500">ERP</span></h1>
+    <div class="mb-6 relative max-w-md">
+        <i class="fas fa-search absolute left-4 top-4 text-slate-500"></i>
+        <input type="text" id="searchInput" onkeyup="searchStock()" placeholder="Cari nama item..." class="w-full p-4 pl-12 rounded-2xl glass border-none focus:ring-2 focus:ring-blue-600 outline-none text-white">
+    </div>
+
+    <div class="overflow-x-auto rounded-3xl glass border border-slate-800">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-white/5 text-slate-400 text-[10px] uppercase tracking-widest">
+                <tr>
+                    <th class="p-5">Item/Produk</th>
+                    <th class="p-5">Kategori</th>
+                    <th class="p-5 text-center">Unit/Stok</th>
+                    <th class="p-5">Status</th>
+                    <th class="p-5 text-right">Tindakan</th>
+                </tr>
+            </thead>
+            <tbody id="stock-table-body" class="text-sm divide-y divide-slate-800">
+                </tbody>
+        </table>
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="glass w-full max-w-md p-8 rounded-[2.5rem] relative">
+            <h2 class="text-xl font-bold mb-6">Daftar Item Baru</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">Nama Item</label>
+                    <input type="text" id="newName" placeholder="Contoh: CCTV Dahua 2MP / Upah Pasang" class="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-blue-600 outline-none mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">Kategori</label>
+                    <select id="newCategory" class="w-full p-4 rounded-2xl bg-[#020617] border border-white/10 focus:ring-2 focus:ring-blue-600 outline-none mt-1 text-white">
+                        <option value="Produk">Produk Fizikal</option>
+                        <option value="Servis">Perkhidmatan/Servis</option>
+                        <option value="Hardware">Hardware/Alatan</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">Stok Awal</label>
+                    <input type="number" id="newStock" value="0" class="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-blue-600 outline-none mt-1">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button onclick="toggleModal(false)" class="flex-1 p-4 rounded-2xl hover:bg-white/5 font-bold transition">Batal</button>
+                    <button onclick="addItem()" class="flex-1 p-4 rounded-2xl bg-blue-600 hover:bg-blue-700 font-bold transition">Simpan</button>
+                </div>
+            </div>
         </div>
+    </div>
+
+    <script type="module">
+        import { db, collection, onSnapshot, doc, updateDoc, addDoc } from "../firebase-config.js";
+
+        const tbody = document.getElementById('stock-table-body');
         
-        <div class="flex-grow overflow-y-auto no-scrollbar space-y-1">
-            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest py-2">Utama</p>
-            <button onclick="loadModule('dashboard')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-home w-6"></i> Dashboard</button>
-            <button onclick="loadModule('pos')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-cash-register w-6"></i> Mini POS</button>
-            <button onclick="loadModule('products')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-tag w-6"></i> Products</button>
+        // Load Data Real-time
+        onSnapshot(collection(db, "inventory"), (snapshot) => {
+            let inventoryData = [];
+            let lowCount = 0;
             
-            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest py-2 mt-4">Operasi</p>
-            <button onclick="loadModule('stock')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-boxes w-6"></i> Stock Tracking</button>
-            <button onclick="loadModule('sales')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-shopping-cart w-6"></i> Sales Mgmt</button>
-            <button onclick="loadModule('purchase')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-truck-loading w-6"></i> Purchase Orders</button>
-            
-            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest py-2 mt-4">Kewangan</p>
-            <button onclick="loadModule('bank')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-university w-6"></i> Bank & Cash</button>
-            <button onclick="loadModule('accounting')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-file-invoice-dollar w-6"></i> Accounting</button>
-            <button onclick="loadModule('my-invoice')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-file-signature w-6"></i> Invoicing</button>
-            
-            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest py-2 mt-4">CRM & Others</p>
-            <button onclick="loadModule('contact')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-users w-6"></i> Contacts</button>
-            <button onclick="loadModule('digital-shoes')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-cloud w-6"></i> Digital Shoes</button>
-            <button onclick="loadModule('report')" class="w-full text-left p-3 rounded-xl hover:bg-white/5 text-sm"><i class="fas fa-chart-pie w-6"></i> Reports</button>
-        </div>
-    </nav>
+            snapshot.forEach((doc) => {
+                inventoryData.push({ id: doc.id, ...doc.data() });
+            });
 
-    <div class="mobile-nav lg:hidden">
-        <button onclick="loadModule('dashboard')" class="nav-btn active"><i class="fas fa-th-large"></i><span>Home</span></button>
-        <button onclick="loadModule('pos')" class="nav-btn"><i class="fas fa-cash-register"></i><span>POS</span></button>
-        <button onclick="loadModule('products')" class="nav-btn"><i class="fas fa-tag"></i><span>Prod</span></button>
-        <button onclick="loadModule('stock')" class="nav-btn"><i class="fas fa-boxes"></i><span>Stock</span></button>
-        <button onclick="loadModule('bank')" class="nav-btn"><i class="fas fa-university"></i><span>Bank</span></button>
-        <button onclick="toggleMoreMenu()" class="nav-btn"><i class="fas fa-ellipsis-h"></i><span>More</span></button>
-    </div>
+            tbody.innerHTML = inventoryData.map(item => {
+                const isLow = item.stock <= 5;
+                if (isLow && item.category !== 'Servis') lowCount++;
 
-    <div id="more-menu" class="fixed inset-0 bg-[#020617]/90 z-[90] hidden p-10 backdrop-blur-xl">
-        <div class="grid grid-cols-3 gap-6 pt-20">
-            <div onclick="loadModule('accounting')" class="flex flex-col items-center gap-2"><div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-purple-500"><i class="fas fa-calculator"></i></div><span class="text-[10px] font-bold uppercase">Accounting</span></div>
-            <div onclick="loadModule('my-invoice')" class="flex flex-col items-center gap-2"><div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-emerald-500"><i class="fas fa-file-invoice"></i></div><span class="text-[10px] font-bold uppercase">Invoice</span></div>
-            <div onclick="loadModule('contact')" class="flex flex-col items-center gap-2"><div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-blue-500"><i class="fas fa-address-book"></i></div><span class="text-[10px] font-bold uppercase">Contacts</span></div>
-            <div onclick="loadModule('report')" class="flex flex-col items-center gap-2"><div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-pink-500"><i class="fas fa-chart-line"></i></div><span class="text-[10px] font-bold uppercase">Reports</span></div>
-            <div onclick="loadModule('digital-shoes')" class="flex flex-col items-center gap-2"><div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-amber-500"><i class="fas fa-cloud"></i></div><span class="text-[10px] font-bold uppercase">Digital</span></div>
-            <div onclick="toggleMoreMenu()" class="flex flex-col items-center gap-2"><div class="w-12 h-12 bg-red-500/20 rounded-2xl flex items-center justify-center text-red-500 border border-red-500/30"><i class="fas fa-times"></i></div><span class="text-[10px] font-bold uppercase">Tutup</span></div>
-        </div>
-    </div>
+                return `
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="p-5 font-bold text-slate-100">${item.name}</td>
+                        <td class="p-5"><span class="bg-white/5 px-3 py-1 rounded-lg text-xs text-slate-400">${item.category}</span></td>
+                        <td class="p-5 text-center font-mono text-lg">${item.stock}</td>
+                        <td class="p-5">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${item.stock > 5 ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500 animate-pulse'}">
+                                ${item.stock > 5 ? 'OK' : 'RENDAH'}
+                            </span>
+                        </td>
+                        <td class="p-5 text-right">
+                            <div class="flex justify-end gap-2">
+                                <button onclick="updateStock('${item.id}', ${item.stock - 1})" class="w-10 h-10 rounded-xl glass hover:bg-red-500/20 text-red-500 transition border border-white/5"><i class="fas fa-minus"></i></button>
+                                <button onclick="updateStock('${item.id}', ${item.stock + 1})" class="w-10 h-10 rounded-xl glass hover:bg-emerald-500/20 text-emerald-500 transition border border-white/5"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
 
-    <main class="lg:ml-72 h-screen flex flex-col">
-        <header class="p-6 flex justify-between items-center">
-            <div>
-                <h2 id="moduleTitle" class="text-xl font-black uppercase tracking-tighter">DASHBOARD</h2>
-                <div id="status-dot" class="flex items-center gap-2 mt-1">
-                    <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">System Online</span>
-                </div>
-            </div>
-            <img src="https://ui-avatars.com/api/?name=Admin&background=0D6EFD&color=fff" class="w-8 h-8 rounded-xl border border-white/10">
-        </header>
-
-        <div class="flex-grow relative overflow-hidden">
-            <iframe id="app-frame" class="hidden"></iframe>
-            <div id="dashboard-view" class="p-4 space-y-4 overflow-y-auto h-full pb-24">
-                <div class="p-8 rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-800 shadow-2xl relative overflow-hidden group" onclick="loadModule('pos')">
-                    <div class="relative z-10">
-                        <h2 class="text-2xl font-black mb-1">Mula Jualan</h2>
-                        <p class="opacity-70 text-xs">Klik untuk lancarkan Terminal POS</p>
-                    </div>
-                    <i class="fas fa-bolt absolute right-[-10px] bottom-[-10px] text-9xl opacity-10 rotate-12 group-hover:scale-110 transition-transform"></i>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="p-6 glass rounded-[2rem]" onclick="loadModule('stock')">
-                        <i class="fas fa-box text-blue-500 mb-3"></i>
-                        <p class="text-[10px] font-bold text-slate-500 uppercase">Stok Kasut</p>
-                        <h4 class="text-lg font-bold">1,240 Unit</h4>
-                    </div>
-                    <div class="p-6 glass rounded-[2rem]" onclick="loadModule('report')">
-                        <i class="fas fa-chart-line text-emerald-500 mb-3"></i>
-                        <p class="text-[10px] font-bold text-slate-500 uppercase">Jualan Hari Ini</p>
-                        <h4 class="text-lg font-bold">RM 450.00</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        function verifyAccess() {
-            let pin = "";
-            document.querySelectorAll('.pin-input').forEach(i => pin += i.value);
-            if (pin === "1234") {
-                document.getElementById('security-overlay').style.display = 'none';
-            } else {
-                alert("PIN SALAH!");
-                document.querySelectorAll('.pin-input').forEach(i => i.value = "");
-                document.querySelectorAll('.pin-input')[0].focus();
-            }
-        }
-
-        function toggleMoreMenu() {
-            const menu = document.getElementById('more-menu');
-            menu.classList.toggle('hidden');
-        }
-
-        function loadModule(name) {
-            const frame = document.getElementById('app-frame');
-            const dash = document.getElementById('dashboard-view');
-            const menu = document.getElementById('more-menu');
-            
-            document.getElementById('moduleTitle').innerText = name.replace('-', ' ');
-            menu.classList.add('hidden'); // Close more menu if open
-
-            // Handle active state for bottom nav
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(btn => btn.innerText.toLowerCase().includes(name.substring(0,3)));
-            if (activeBtn) activeBtn.classList.add('active');
-
-            if (name === 'dashboard') {
-                frame.classList.add('hidden');
-                dash.classList.remove('hidden');
-            } else {
-                frame.src = `./${name}/index.html`;
-                frame.classList.remove('hidden');
-                dash.classList.add('hidden');
-            }
-        }
-
-        const inputs = document.querySelectorAll('.pin-input');
-        inputs.forEach((input, index) => {
-            input.addEventListener('input', () => { if (input.value && index < 3) inputs[index+1].focus(); });
+            document.getElementById('total-items').innerText = inventoryData.length;
+            document.getElementById('low-stock-count').innerText = lowCount;
         });
+
+        // Add New Item Function
+        window.addItem = async () => {
+            const name = document.getElementById('newName').value;
+            const category = document.getElementById('newCategory').value;
+            const stock = parseInt(document.getElementById('newStock').value);
+
+            if (!name) return alert("Sila masukkan nama item!");
+
+            try {
+                await addDoc(collection(db, "inventory"), {
+                    name: name,
+                    category: category,
+                    stock: stock,
+                    createdAt: new Date()
+                });
+                toggleModal(false);
+                // Clear input
+                document.getElementById('newName').value = "";
+                document.getElementById('newStock').value = "0";
+            } catch (e) { console.error("Error adding: ", e); }
+        };
+
+        window.updateStock = async (id, newStock) => {
+            if (newStock < 0) return;
+            await updateDoc(doc(db, "inventory", id), { stock: newStock });
+        };
+
+        window.toggleModal = (show) => {
+            document.getElementById('addModal').classList.toggle('active', show);
+        };
+
+        window.searchStock = () => {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#stock-table-body tr');
+            rows.forEach(row => {
+                const name = row.cells[0].innerText.toLowerCase();
+                row.style.display = name.includes(input) ? '' : 'none';
+            });
+        };
     </script>
 </body>
 </html>
