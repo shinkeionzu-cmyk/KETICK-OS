@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LHDN Vault | KETICK OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .drop-zone { border: 2px dashed rgba(255,255,255,0.1); transition: all 0.3s; }
+        .drop-zone:active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
+    </style>
+</head>
+<body class="p-4 lg:p-8">
+
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-xl font-black uppercase tracking-tight">Digital Receipt Vault</h1>
+            <p class="text-slate-500 text-[10px] font-bold">KEPERLUAN AUDIT LHDN</p>
+        </div>
+        <div class="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center border border-amber-500/30">
+            <i class="fas fa-shield-alt text-amber-500"></i>
+        </div>
+    </div>
+
+    <div class="glass p-6 rounded-[2.5rem] mb-8">
+        <h3 class="text-sm font-bold mb-4">Upload Resit Baru</h3>
+        <div class="space-y-4">
+            <div class="drop-zone p-10 rounded-3xl flex flex-col items-center justify-center text-center cursor-pointer" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-camera text-3xl text-blue-500 mb-3"></i>
+                <p class="text-xs font-bold">Tangkap Gambar Resit</p>
+                <p class="text-[9px] text-slate-500 mt-1">Sila pastikan jumlah & tarikh jelas</p>
+                <input type="file" id="fileInput" accept="image/*" capture="camera" class="hidden" onchange="previewImage(event)">
+            </div>
+            
+            <div id="preview-area" class="hidden">
+                <img id="img-preview" src="#" class="w-full rounded-2xl mb-4 border border-slate-800">
+                <input type="text" id="receipt-title" placeholder="Nama Perbelanjaan (Contoh: Minyak Lori)" class="w-full bg-slate-900 p-4 rounded-xl text-sm mb-2 outline-none border border-slate-800 focus:border-blue-500">
+                <input type="number" id="receipt-amount" placeholder="Jumlah (RM)" class="w-full bg-slate-900 p-4 rounded-xl text-sm mb-4 outline-none border border-slate-800 focus:border-blue-500">
+                <button onclick="uploadToFirebase()" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-blue-900/40">Simpan ke Cloud</button>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 px-2">Arkib Digital</h3>
+    <div class="space-y-3" id="receipt-list">
+        <div class="glass p-4 rounded-2xl flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center text-blue-400">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-bold">Toll & Parking</p>
+                    <p class="text-[9px] text-slate-500">12 Mar 2026 • 1.2MB</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-black text-blue-500">RM 45.00</p>
+                <button class="text-[10px] text-slate-500 underline">Lihat Resit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function previewImage(event) {
+            const preview = document.getElementById('img-preview');
+            const previewArea = document.getElementById('preview-area');
+            preview.src = URL.createObjectURL(event.target.files[0]);
+            previewArea.classList.remove('hidden');
+        }
+
+        function uploadToFirebase() {
+            // Nanti kita masukkan logic Firebase Storage kat sini
+            alert("Resit sedang dihantar ke Firebase Storage...");
+            location.reload();
+        }
+    </script>
+</body>
+</html>
