@@ -1,16 +1,24 @@
 <!DOCTYPE html>
-<html>
-<body style="background:#020617; color:white; font-family:sans-serif; padding:20px;">
-    <h2>Ketick OS Database Setup</h2>
-    <p id="status">Sila tekan butang di bawah untuk masukkan data stok awal...</p>
-    <button onclick="runSetup()" style="padding:15px; background:blue; color:white; border:none; border-radius:10px;">MASUKKAN DATA STOK</button>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Database | KETICK OS</title>
+</head>
+<body style="background:#020617; color:white; font-family:sans-serif; padding:40px; text-align:center;">
+    <div style="max-width:400px; margin:auto; background:rgba(255,255,255,0.05); padding:30px; border-radius:20px; border:1px solid rgba(255,255,255,0.1);">
+        <h2>Ketick OS Setup</h2>
+        <p id="status" style="color:#94a3b8;">Sila tekan butang di bawah untuk masukkan data stok awal ke Cloud...</p>
+        <button onclick="runSetup()" style="width:100%; padding:15px; background:#2563eb; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:20px;">MASUKKAN DATA STOK</button>
+    </div>
 
     <script type="module">
-        import { db, collection, addDoc } from "./firebase-config.js";
+        // Import menggunakan absolute path
+        import { db, collection, addDoc } from "/firebase-config.js";
 
         window.runSetup = async function() {
             const status = document.getElementById('status');
-            status.innerText = "Sila tunggu, tengah hantar data...";
+            status.innerText = "⏳ Sedang menghantar data ke Firebase...";
 
             const initialStock = [
                 { name: "Sneakers Pro", category: "Kasut", stock: 50, price: 150.00, min: 5 },
@@ -23,9 +31,10 @@
                 for (let item of initialStock) {
                     await addDoc(collection(db, "inventory"), item);
                 }
-                status.innerText = "BERJAYA! Data stok dah masuk Firestore. Awak boleh padam fail setup.html ni sekarang.";
+                status.innerHTML = "<b style='color:#10b981;'>✅ BERJAYA!</b><br><br>Data dah masuk Firestore. Awak boleh buka folder /pos sekarang.";
             } catch (e) {
-                status.innerText = "Gagal: " + e.message;
+                status.innerHTML = "<b style='color:#ef4444;'>❌ GAGAL:</b><br>" + e.message;
+                console.error(e);
             }
         }
     </script>
