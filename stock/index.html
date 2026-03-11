@@ -55,22 +55,27 @@
         </table>
     </div>
 
-    <script>
-        // Data Stok Dummy
-        let inventory = [
-            { id: 1, name: "Sneakers Pro White", category: "Kasut", stock: 45, min: 10 },
-            { id: 2, name: "Formal Leather Black", category: "Kasut", stock: 8, min: 10 },
-            { id: 3, name: "Sport Socks (3-pack)", category: "Aksesori", stock: 120, min: 20 },
-            { id: 4, name: "Shoe Cleaner Kit", category: "Aksesori", stock: 5, min: 15 },
-            { id: 5, name: "Running Shoes Blue", category: "Kasut", stock: 12, min: 10 }
-        ];
+        <script type="module">
+        // 1. Import fungsi yang diperlukan dari config awak kat luar
+        import { db, collection, onSnapshot, doc, updateDoc } from "../firebase-config.js";
 
-        function renderStock() {
-            const tbody = document.getElementById('stock-table-body');
+        const tbody = document.getElementById('stock-table-body');
+        const totalItemsEl = document.getElementById('total-items');
+        const lowStockCountEl = document.getElementById('low-stock-count');
+
+        // 2. Ambil data real-time dari Cloud Firebase
+        onSnapshot(collection(db, "inventory"), (snapshot) => {
             let lowStock = 0;
+            let inventoryData = [];
+            
+            snapshot.forEach((doc) => {
+                inventoryData.push({ id: doc.id, ...doc.data() });
+            });
 
-            tbody.innerHTML = inventory.map(item => {
-                const isLow = item.stock <= item.min;
+            // Update UI senarai kasut
+            tbody.innerHTML = inventoryData.map(item => {
+                const minStock = 10; // Kita anggap baki 10 tu dah rendah
+                const isLow = item.stock <= minStock;
                 if (isLow) lowStock++;
 
                 let statusColor = "bg-emerald-500";
@@ -79,25 +84,17 @@
                 if (item.stock <= 0) {
                     statusColor = "bg-slate-500";
                     statusText = "Habis";
-                } else if (item.stock <= item.min) {
+                } else if (isLow) {
                     statusColor = "bg-red-500 animate-pulse";
                     statusText = "Kritikal";
-                } else if (item.stock <= item.min * 2) {
-                    statusColor = "bg-amber-500";
-                    statusText = "Rendah";
                 }
 
                 return `
                     <tr class="hover:bg-white/5 transition-colors">
-                        <td class="p-5 font-bold">${item.name}</td>
-                        <td class="p-5 text-slate-400">${item.category}</td>
-                        <td class="p-5">
-                            <div class="flex flex-col items-center gap-1">
-                                <span class="text-lg font-mono">${item.stock}</span>
-                                <div class="w-20 h-1 bg-slate-800 rounded-full overflow-hidden">
-                                    <div class="h-full ${statusColor}" style="width: ${Math.min((item.stock/100)*100, 100)}%"></div>
-                                </div>
-                            </div>
+                        <td class="p-5 font-bold text-slate-100">${item.name}</td>
+                        <td class="p-5 text-slate-400">${item.category || 'Kasut'}</td>
+                        <td class="p-5 text-center">
+                            <span class="text-lg font-mono text-white">${item.stock}</span>
                         </td>
                         <td class="p-5">
                             <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase text-white ${statusColor}">
@@ -106,10 +103,10 @@
                         </td>
                         <td class="p-5 text-right">
                             <div class="flex justify-end gap-2">
-                                <button onclick="adjustStock(${item.id}, -1)" class="w-8 h-8 rounded-lg glass hover:bg-red-500/20 text-red-500 transition">
+                                <button onclick="updateStock('${item.id}', ${item.stock - 1})" class="w-10 h-10 rounded-xl glass hover:bg-red-500/20 text-red-500 transition border border-white/5">
                                     <i class="fas fa-minus text-xs"></i>
                                 </button>
-                                <button onclick="adjustStock(${item.id}, 1)" class="w-8 h-8 rounded-lg glass hover:bg-emerald-500/20 text-emerald-500 transition">
+                                <button onclick="updateStock('${item.id}', ${item.stock + 1})" class="w-10 h-10 rounded-xl glass hover:bg-emerald-500/20 text-emerald-500 transition border border-white/5">
                                     <i class="fas fa-plus text-xs"></i>
                                 </button>
                             </div>
@@ -118,29 +115,31 @@
                 `;
             }).join('');
 
-            document.getElementById('total-items').innerText = inventory.length;
-            document.getElementById('low-stock-count').innerText = lowStock;
-        }
+            // Update statistik kat atas tu
+            totalItemsEl.innerText = inventoryData.length;
+            lowStockCountEl.innerText = lowStock;
+        });
 
-        function adjustStock(id, amount) {
-            const item = inventory.find(i => i.id === id);
-            if (item) {
-                item.stock = Math.max(0, item.stock + amount);
-                renderStock();
+        // 3. Fungsi untuk simpan baki baru ke Firebase bila butang ditekan
+        window.updateStock = async (id, newStock) => {
+            if (newStock < 0) return; // Takleh bagi stok negatif
+            try {
+                const itemRef = doc(db, "inventory", id);
+                await updateDoc(itemRef, { stock: newStock });
+            } catch (error) {
+                console.error("Gagal update stok:", error);
             }
-        }
+        };
 
-        function searchStock() {
+        // Fungsi carian (Search)
+        window.searchStock = () => {
             const input = document.getElementById('searchInput').value.toLowerCase();
             const rows = document.querySelectorAll('#stock-table-body tr');
-            
             rows.forEach(row => {
                 const name = row.cells[0].innerText.toLowerCase();
                 row.style.display = name.includes(input) ? '' : 'none';
             });
-        }
-
-        window.onload = renderStock;
+        };
     </script>
 </body>
 </html>
