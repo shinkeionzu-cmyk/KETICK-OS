@@ -2,64 +2,95 @@
 <html lang="ms" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mini POS | KETICK OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: transparent; color: white; overflow: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: transparent; color: white; height: 100vh; overflow: hidden; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* Layout Grid */
+        /* Layout Grid Utama */
         .pos-grid {
             display: grid;
             grid-template-columns: 1fr;
-            height: calc(100vh - 10px);
+            height: 100vh;
+            gap: 10px;
         }
         @media (min-width: 1024px) {
             .pos-grid { grid-template-columns: 1fr 380px; }
         }
+
+        /* Grid Produk Versi Kecil */
+        #productGrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 Kolum Mobile */
+            gap: 8px;
+        }
+        @media (min-width: 1024px) {
+            #productGrid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+        }
+
+        .product-card-img {
+            height: 70px; /* Saiz gambar lebih kecil */
+            width: 100%;
+            object-fit: cover;
+        }
+        
+        .btn-press:active { transform: scale(0.95); }
     </style>
 </head>
 <body class="p-2 md:p-4">
 
-    <div class="pos-grid gap-4">
-        <div class="flex flex-col h-full overflow-hidden bg-slate-900/20 rounded-[2rem] border border-white/5">
-            <div class="p-4 glass flex justify-between items-center">
-                <h2 class="font-black text-sm uppercase tracking-tighter">Katalog Produk</h2>
-                <input type="text" id="searchItem" placeholder="Cari..." 
-                    class="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-blue-500 w-32 md:w-48">
+    <div class="pos-grid">
+        <section class="flex flex-col h-full overflow-hidden bg-slate-900/20 rounded-[2rem] border border-white/5">
+            <header class="p-4 glass flex justify-between items-center gap-2">
+                <h2 class="font-black text-[10px] uppercase tracking-tighter">Katalog</h2>
+                <div class="relative flex-grow max-w-[200px]">
+                    <i class="fas fa-search absolute left-3 top-2.5 text-[10px] text-slate-500"></i>
+                    <input type="text" id="searchItem" placeholder="Cari produk..." 
+                        class="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-8 pr-4 text-[10px] focus:outline-none focus:border-blue-500">
+                </div>
+            </header>
+
+            <div id="productGrid" class="flex-grow overflow-y-auto p-3 no-scrollbar">
+                <div class="col-span-full py-10 text-center opacity-30 text-[10px] font-bold uppercase tracking-widest animate-pulse">
+                    Memuatkan Katalog...
+                </div>
+            </div>
+        </section>
+
+        <section class="flex flex-col h-full bg-slate-900/40 rounded-[2rem] border border-white/10 glass overflow-hidden">
+            <div class="p-5 border-b border-white/5 flex justify-between items-center">
+                <h2 class="font-black text-xs uppercase tracking-widest">Pesanan</h2>
+                <button onclick="clearCart()" class="text-[9px] text-red-500 font-bold uppercase">Clear</button>
             </div>
 
-            <div id="productGrid" class="flex-grow overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 no-scrollbar">
+            <div id="cartItems" class="flex-grow overflow-y-auto p-4 space-y-2 no-scrollbar">
+                <div class="text-center py-20 opacity-10">
+                    <i class="fas fa-shopping-basket text-4xl"></i>
                 </div>
-        </div>
-
-        <div class="flex flex-col h-full bg-slate-900/40 rounded-[2rem] border border-white/10 glass overflow-hidden">
-            <div class="p-5 border-b border-white/5">
-                <h2 class="font-black text-sm uppercase">Pesanan Semasa</h2>
             </div>
-
-            <div id="cartItems" class="flex-grow overflow-y-auto p-4 space-y-3 no-scrollbar">
-                </div>
 
             <div class="p-6 bg-blue-600/10 border-t border-white/5 space-y-4">
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-400">JUMLAH KESELURUHAN</span>
-                    <span id="totalAmount" class="text-2xl font-black text-emerald-400">RM 0.00</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Bayaran</span>
+                    <span id="totalAmount" class="text-2xl font-black text-emerald-400 tracking-tighter">RM 0.00</span>
                 </div>
-                <button onclick="processCheckout()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-blue-600/20 transition-all">
-                    Sahkan & Bayar
+                <button onclick="processCheckout()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-blue-600/20 btn-press transition-all">
+                    Bayar Sekarang
                 </button>
             </div>
-        </div>
+        </section>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // Gunakan Config anda yang sama
         const firebaseConfig = {
             apiKey: "AIzaSyCT2nlX1fjiGvXAuaBWein6e1BQOOCH8ew",
             authDomain: "ketick-os.firebaseapp.com",
@@ -73,45 +104,59 @@
 
         let cart = [];
 
-        // Load Produk
+        // 1. Load Produk (Grid Kecil)
         db.collection("inventory").onSnapshot(snap => {
             const grid = document.getElementById('productGrid');
             grid.innerHTML = '';
             snap.forEach(doc => {
                 const p = { id: doc.id, ...doc.data() };
                 const card = document.createElement('div');
-                card.className = "glass p-3 rounded-2xl cursor-pointer hover:border-blue-500/50 transition-all";
+                card.className = "glass p-2 rounded-xl cursor-pointer hover:border-blue-500/50 transition-all text-center btn-press";
                 card.onclick = () => addToCart(p);
                 card.innerHTML = `
-                    <div class="aspect-square bg-white/5 rounded-xl mb-2 overflow-hidden">
-                        <img src="${p.image || 'https://via.placeholder.com/150'}" class="w-full h-full object-cover">
+                    <div class="bg-white/5 rounded-lg mb-1 overflow-hidden">
+                        <img src="${p.image || 'https://via.placeholder.com/150'}" class="product-card-img">
                     </div>
-                    <h3 class="text-[10px] font-black uppercase truncate">${p.name}</h3>
-                    <p class="text-blue-400 font-bold text-xs mt-1">RM ${parseFloat(p.price).toFixed(2)}</p>
+                    <h3 class="text-[8px] font-black uppercase truncate leading-tight mb-1">${p.name}</h3>
+                    <p class="text-blue-400 font-extrabold text-[9px]">RM ${parseFloat(p.price).toFixed(2)}</p>
+                    <p class="text-[7px] text-slate-500 font-bold uppercase mt-0.5">Stok: ${p.stock}</p>
                 `;
                 grid.appendChild(card);
             });
         });
 
+        // 2. Tambah Ke Troli
         function addToCart(p) {
+            if(p.stock <= 0) return alert("Stok Habis!");
             const exist = cart.find(i => i.id === p.id);
-            if(exist) { exist.qty++; } else { cart.push({...p, qty: 1}); }
+            if(exist) {
+                if(exist.qty < p.stock) exist.qty++;
+                else alert("Had stok dicapai!");
+            } else {
+                cart.push({...p, qty: 1});
+            }
             renderCart();
         }
 
+        // 3. Paparan Troli
         function renderCart() {
             const container = document.getElementById('cartItems');
             let total = 0;
             container.innerHTML = '';
+            
             cart.forEach((item, index) => {
-                total += (item.price * item.qty);
+                const subtotal = item.price * item.qty;
+                total += subtotal;
                 container.innerHTML += `
                     <div class="flex items-center justify-between p-3 glass rounded-xl border border-white/5">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-black uppercase">${item.name}</span>
-                            <span class="text-[9px] text-blue-400">${item.qty} x RM ${item.price}</span>
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-[9px] font-black uppercase tracking-tight">${item.name}</span>
+                            <span class="text-[10px] text-blue-400 font-bold">${item.qty} x RM ${item.price.toFixed(2)}</span>
                         </div>
-                        <button onclick="removeFromCart(${index})" class="text-red-500 text-xs"><i class="fas fa-times-circle"></i></button>
+                        <div class="flex items-center gap-3">
+                            <span class="text-[10px] font-black">RM ${subtotal.toFixed(2)}</span>
+                            <button onclick="removeFromCart(${index})" class="text-red-500 text-xs"><i class="fas fa-times-circle"></i></button>
+                        </div>
                     </div>
                 `;
             });
@@ -123,12 +168,23 @@
             renderCart();
         }
 
+        function clearCart() {
+            cart = [];
+            renderCart();
+        }
+
+        // 4. Proses Bayaran (Sync Stok & Sales)
         async function processCheckout() {
-            if(cart.length === 0) return alert("Troli kosong!");
+            if(cart.length === 0) return;
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerText = "MEMPROSES...";
+
             const batch = db.batch();
             const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
 
             try {
+                // Rekod Sales
                 const saleRef = db.collection("sales").doc();
                 batch.set(saleRef, {
                     items: cart,
@@ -137,19 +193,27 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
+                // Potong Stok
                 cart.forEach(item => {
                     const invRef = db.collection("inventory").doc(item.id);
-                    batch.update(invRef, { stock: firebase.firestore.FieldValue.increment(-item.qty) });
+                    batch.update(invRef, {
+                        stock: firebase.firestore.FieldValue.increment(-item.qty)
+                    });
                 });
 
                 await batch.commit();
-                alert("Jualan Berjaya!");
-                cart = [];
-                renderCart();
-            } catch(e) { alert("Ralat!"); }
+                alert("Jualan Berjaya Disimpan!");
+                clearCart();
+            } catch(e) {
+                alert("Ralat Transaksi!");
+                console.error(e);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "BAYAR SEKARANG";
+            }
         }
 
-        // Search
+        // 5. Search Filter
         document.getElementById('searchItem').addEventListener('input', (e) => {
             const val = e.target.value.toLowerCase();
             document.querySelectorAll('#productGrid > div').forEach(card => {
