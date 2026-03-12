@@ -151,7 +151,6 @@
         function removeFromCart(index) { cart.splice(index, 1); renderCart(); }
         function clearCart() { cart = []; renderCart(); }
 
-        // PEMBAYARAN LOGIC
         function openPayment() {
             if(cart.length === 0) return;
             document.getElementById('pay-grand-total').innerText = `RM ${grandTotal.toFixed(2)}`;
@@ -174,6 +173,7 @@
                 cashSection.classList.add('hidden');
                 btnQr.className = "py-4 rounded-2xl border-2 border-blue-600 bg-blue-600/10 text-blue-500 font-black text-[10px] uppercase tracking-widest transition-all";
                 btnCash.className = "py-4 rounded-2xl border-2 border-white/5 bg-white/5 text-slate-400 font-black text-[10px] uppercase tracking-widest transition-all";
+                document.getElementById('pay-change').innerText = "RM 0.00";
             }
         }
 
@@ -182,8 +182,9 @@
         function calculateChange() {
             const received = parseFloat(document.getElementById('cash-received').value) || 0;
             const baki = received - grandTotal;
-            document.getElementById('pay-change').innerText = `RM ${Math.max(0, baki).toFixed(2)}`;
-            document.getElementById('pay-change').style.color = baki < 0 ? '#f87171' : '#34d399';
+            const displayBaki = document.getElementById('pay-change');
+            displayBaki.innerText = `RM ${Math.max(0, baki).toFixed(2)}`;
+            displayBaki.style.color = (baki < 0 && currentMethod === 'cash') ? '#f87171' : '#34d399';
         }
 
         async function finalizeSale() {
@@ -192,12 +193,15 @@
             
             const btn = document.getElementById('btn-finalize');
             btn.disabled = true; btn.innerText = "MEMPROSES...";
-
             const batch = db.batch();
+            
             try {
                 const saleRef = db.collection("sales").doc();
                 batch.set(saleRef, {
-                    items: cart, totalValue: grandTotal, method: currentMethod,
+                    items: cart,
+                    totalValue: grandTotal,
+                    method: currentMethod,
+                    received: currentMethod === 'cash' ? received : grandTotal,
                     date: new Date().toISOString().split('T')[0],
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -208,7 +212,7 @@
                 await batch.commit();
                 alert("Jualan Berjaya!");
                 clearCart(); closePayment();
-            } catch(e) { alert("Ralat!"); } finally { btn.disabled = false; btn.innerText = "Sahkan Jualan"; }
+            } catch(e) { alert("Ralat Transaksi!"); } finally { btn.disabled = false; btn.innerText = "Sahkan Jualan"; }
         }
 
         document.getElementById('searchItem').addEventListener('input', (e) => {
