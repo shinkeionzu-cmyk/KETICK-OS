@@ -7,83 +7,148 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; height: 100vh; overflow: hidden; margin: 0; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        /* Layout Grid */
-        .pos-grid { 
-            display: grid; grid-template-rows: auto 1fr auto; 
-            height: 100vh; gap: 8px; padding: 8px;
-        }
-
-        #productGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .product-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.2rem; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .product-card-img { height: 50px; width: 50px; object-fit: cover; border-radius: 10px; background: #1e293b; }
+        .product-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .product-card:active { transform: scale(0.95); }
     </style>
 </head>
-<body>
+<body class="p-4 no-scrollbar">
 
-    <div class="pos-grid">
-        <header class="flex justify-between items-center px-2 py-1">
-            <h1 class="text-blue-500 font-black text-xl leading-none">POS TERMINAL</h1>
-        </header>
-
-        <section class="flex flex-col overflow-hidden bg-slate-900/20 rounded-[2rem] border border-white/5">
-            <div class="p-3 flex justify-between items-center glass border-b border-white/5">
-                <input type="text" id="searchItem" placeholder="Cari..." class="bg-white/5 border border-white/10 rounded-xl py-1 px-3 text-[10px] w-full text-white outline-none">
-            </div>
-            <div id="productGridContainer" class="flex-grow overflow-y-auto p-3 no-scrollbar">
-                <div id="productGrid"></div>
-            </div>
-        </section>
-
-        <section class="bg-slate-900/40 rounded-[2rem] border border-white/10 glass p-5 mb-2">
-            <div class="flex justify-between items-center">
-                <span id="totalAmount" class="text-3xl font-black text-emerald-400">RM 0.00</span>
-                <button class="bg-blue-600 px-6 py-3 rounded-xl font-black text-[10px] uppercase">Bayar</button>
-            </div>
-        </section>
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-xl font-black tracking-tighter uppercase">Mini <span class="text-emerald-500">POS</span></h1>
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Kaunter Jualan Pantas</p>
+        </div>
+        <button onclick="toggleCart()" class="relative w-12 h-12 glass rounded-2xl flex items-center justify-center border-emerald-500/30">
+            <i class="fas fa-shopping-basket text-emerald-500"></i>
+            <span id="cart-count" class="absolute -top-1 -right-1 bg-emerald-500 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">0</span>
+        </button>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <div class="relative mb-6">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+        <input type="text" placeholder="Cari produk atau scan barcode..." class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-emerald-500 transition-all">
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-24">
+        <div onclick="addToCart('Barang A', 15.00)" class="product-card p-4 glass rounded-[2rem] border border-white/5">
+            <div class="w-full aspect-square bg-white/5 rounded-2xl mb-3 flex items-center justify-center">
+                <i class="fas fa-box text-3xl text-slate-700"></i>
+            </div>
+            <h3 class="font-bold text-sm truncate">Produk Contoh A</h3>
+            <p class="text-emerald-400 font-black text-sm mt-1">RM 15.00</p>
+        </div>
+        <div onclick="addToCart('Barang B', 25.50)" class="product-card p-4 glass rounded-[2rem] border border-white/5">
+            <div class="w-full aspect-square bg-white/5 rounded-2xl mb-3 flex items-center justify-center">
+                <i class="fas fa-box text-3xl text-slate-700"></i>
+            </div>
+            <h3 class="font-bold text-sm truncate">Produk Contoh B</h3>
+            <p class="text-emerald-400 font-black text-sm mt-1">RM 25.50</p>
+        </div>
+    </div>
+
+    <div id="cart-overlay" class="fixed inset-0 bg-[#020617] z-[200] translate-y-full transition-transform duration-500 p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-black tracking-tighter">SENARAI <span class="text-emerald-500">JUALAN</span></h2>
+            <button onclick="toggleCart()" class="w-10 h-10 glass rounded-full flex items-center justify-center text-slate-400"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div id="cart-items" class="flex-grow overflow-y-auto space-y-4 no-scrollbar">
+            <div class="text-center py-20 text-slate-600">
+                <i class="fas fa-shopping-cart text-4xl mb-4 opacity-20"></i>
+                <p class="text-xs font-bold uppercase tracking-widest">Bakul Kosong</p>
+            </div>
+        </div>
+
+        <div class="mt-6 space-y-4 border-t border-white/10 pt-6">
+            <div class="flex justify-between items-center">
+                <span class="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Jumlah Besar</span>
+                <span id="total-price" class="text-2xl font-black text-emerald-400 tracking-tighter">RM 0.00</span>
+            </div>
+            <button onclick="processPayment()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-5 rounded-2xl transition shadow-xl shadow-emerald-600/20 uppercase tracking-[0.2em] text-xs">Sahkan Bayaran</button>
+        </div>
+    </div>
 
     <script>
-        const firebaseConfig = { /* Config Firebase Awak */ };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        let cart = [];
+        let isCartOpen = false;
 
-        // 2. LOGIK HANTAR ARAHAN KE PARENT
-        const scrollContainer = document.getElementById('productGridContainer');
-        let lastScrollY = 0;
-
-        scrollContainer.addEventListener('scroll', () => {
-            if (scrollContainer.scrollTop > lastScrollY && scrollContainer.scrollTop > 20) {
-                // Beritahu parent (index.html) untuk sorok nav
-                window.parent.postMessage('hideNav', '*');
-            } else {
-                // Beritahu parent (index.html) untuk tunjuk nav
-                window.parent.postMessage('showNav', '*');
+        // 1. FUNGSI UTAMA KOMUNIKASI DENGAN DASHBOARD
+        function setParentNav(status) {
+            if (window.parent) {
+                window.parent.postMessage(status === 'hide' ? 'hideNav' : 'showNav', '*');
             }
-            lastScrollY = scrollContainer.scrollTop;
-        });
+        }
 
-        // Load Produk dari Firestore
-        db.collection("inventory").onSnapshot(snap => {
-            const grid = document.getElementById('productGrid');
-            grid.innerHTML = '';
-            snap.forEach(doc => {
-                const p = doc.data();
-                grid.innerHTML += `
-                    <div class="product-card">
-                        <img src="${p.image || ''}" class="product-card-img">
-                        <p class="text-[7px] font-bold mt-2">${p.name}</p>
-                        <p class="text-blue-400 font-black text-[9px]">RM ${p.price}</p>
-                    </div>`;
-            });
-        });
+        function toggleCart() {
+            const overlay = document.getElementById('cart-overlay');
+            if (!isCartOpen) {
+                overlay.classList.remove('translate-y-full');
+                setParentNav('hide'); // SOROK NAV DASHBOARD
+                isCartOpen = true;
+            } else {
+                overlay.classList.add('translate-y-full');
+                setParentNav('show'); // TUNJUK NAV DASHBOARD
+                isCartOpen = false;
+            }
+        }
+
+        function addToCart(name, price) {
+            cart.push({ name, price });
+            updateCartUI();
+            
+            // Effect kecik bila add barang
+            const count = document.getElementById('cart-count');
+            count.classList.add('scale-125', 'bg-white', 'text-emerald-600');
+            setTimeout(() => count.classList.remove('scale-125', 'bg-white', 'text-emerald-600'), 200);
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items');
+            const totalEl = document.getElementById('total-price');
+            const countEl = document.getElementById('cart-count');
+            
+            countEl.innerText = cart.length;
+            
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="text-center py-20 text-slate-600"><i class="fas fa-shopping-cart text-4xl mb-4 opacity-20"></i><p class="text-xs font-bold uppercase tracking-widest">Bakul Kosong</p></div>`;
+                totalEl.innerText = "RM 0.00";
+                return;
+            }
+
+            let total = 0;
+            container.innerHTML = cart.map((item, index) => {
+                total += item.price;
+                return `
+                    <div class="flex justify-between items-center p-4 glass rounded-2xl border-white/5">
+                        <div>
+                            <p class="font-bold text-sm">${item.name}</p>
+                            <p class="text-[10px] text-emerald-500 font-black">RM ${item.price.toFixed(2)}</p>
+                        </div>
+                        <button onclick="removeItem(${index})" class="text-red-500/50 hover:text-red-500"><i class="fas fa-trash-alt text-xs"></i></button>
+                    </div>
+                `;
+            }).join('');
+            
+            totalEl.innerText = `RM ${total.toFixed(2)}`;
+        }
+
+        function removeItem(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function processPayment() {
+            if(cart.length === 0) return alert("Bakul masih kosong!");
+            
+            alert("Bayaran Berjaya Diterima!");
+            cart = [];
+            updateCartUI();
+            toggleCart(); // Ini akan automatik panggil setParentNav('show')
+        }
     </script>
 </body>
 </html>
