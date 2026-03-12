@@ -22,7 +22,7 @@
             <h2 class="text-2xl font-black tracking-tighter uppercase">Inventory <span class="text-blue-500">Master</span></h2>
             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Sistem Pengurusan Stok Real-time</p>
         </div>
-        <button onclick="toggleModal(true)" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-blue-600/20 transition-all">
+        <button onclick="openAddModal()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-blue-600/20 transition-all">
             <i class="fas fa-plus mr-2"></i> Tambah Item
         </button>
     </div>
@@ -55,11 +55,12 @@
         </table>
     </div>
 
-    <div id="addModal" class="modal">
+    <div id="productModal" class="modal">
         <div class="glass w-full max-w-lg rounded-[3rem] p-8 relative border border-white/10 shadow-2xl">
             <button onclick="toggleModal(false)" class="absolute top-6 right-6 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
-            <h3 class="text-xl font-black uppercase tracking-tighter mb-6">Daftar Produk Baru</h3>
+            <h3 id="modalTitle" class="text-xl font-black uppercase tracking-tighter mb-6">Daftar Produk Baru</h3>
             <form id="productForm" class="space-y-4">
+                <input type="hidden" id="editId">
                 <div class="flex flex-col items-center mb-4">
                     <div id="imagePreview" class="w-24 h-24 rounded-2xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center mb-2 overflow-hidden">
                         <i class="fas fa-image text-slate-600 text-2xl"></i>
@@ -76,19 +77,17 @@
                     </div>
                     <div>
                         <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Kategori</label>
-                        <select id="itemCategory" class="input-style">
-                            <option value="MAKANAN">MAKANAN</option>
-                            <option value="MINUMAN">MINUMAN</option>
-                            <option value="SERVIS">SERVIS</option>
-                            <option value="LAIN-LAIN">LAIN-LAIN</option>
-                        </select>
+                        <div class="flex gap-2">
+                            <select id="itemCategory" class="input-style flex-1"></select>
+                            <button type="button" onclick="addNewCategory()" class="bg-slate-800 px-3 rounded-xl hover:bg-slate-700"><i class="fas fa-plus text-[10px]"></i></button>
+                        </div>
                     </div>
                     <div>
                         <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Harga Jualan (RM)</label>
                         <input type="number" step="0.01" id="itemPrice" class="input-style" placeholder="0.00" required>
                     </div>
                     <div>
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Stok Awal</label>
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Stok Baki</label>
                         <input type="number" id="itemStock" class="input-style" placeholder="0" required>
                     </div>
                     <div>
@@ -96,7 +95,7 @@
                         <input type="text" id="itemSku" class="input-style" placeholder="P001">
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] mt-6 transition-all shadow-lg shadow-blue-600/20">
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] mt-6 transition-all shadow-lg shadow-blue-600/20">
                     Simpan Ke Database
                 </button>
             </form>
@@ -119,37 +118,60 @@
         const db = firebase.firestore();
 
         let base64Image = "";
+        let categories = ["LAIN-LAIN"];
 
-        function toggleModal(show) {
-            document.getElementById('addModal').style.display = show ? 'flex' : 'none';
-            if(!show) {
-                document.getElementById('productForm').reset();
-                document.getElementById('imagePreview').innerHTML = `<i class="fas fa-image text-slate-600 text-2xl"></i>`;
-                base64Image = "";
+        // Muat turun kategori unik dari database
+        async function loadCategories() {
+            const snap = await db.collection("inventory").get();
+            const set = new Set(["LAIN-LAIN"]);
+            snap.forEach(doc => { if(doc.data().category) set.add(doc.data().category) });
+            categories = Array.from(set);
+            renderCategoryDropdown();
+        }
+
+        function renderCategoryDropdown() {
+            const select = document.getElementById('itemCategory');
+            select.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function addNewCategory() {
+            const name = prompt("Masukkan Nama Kategori Baru:");
+            if(name && !categories.includes(name.toUpperCase())) {
+                categories.push(name.toUpperCase());
+                renderCategoryDropdown();
+                document.getElementById('itemCategory').value = name.toUpperCase();
             }
         }
 
-        // Fungsi baru untuk mengecilkan saiz gambar
+        function toggleModal(show) {
+            document.getElementById('productModal').style.display = show ? 'flex' : 'none';
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').innerText = "Daftar Produk Baru";
+            document.getElementById('productForm').reset();
+            document.getElementById('editId').value = "";
+            document.getElementById('imagePreview').innerHTML = `<i class="fas fa-image text-slate-600 text-2xl"></i>`;
+            base64Image = "";
+            toggleModal(true);
+        }
+
         function previewFile() {
             const file = document.querySelector('input[type=file]').files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.readAsDataURL(file);
-            reader.onload = function (event) {
+            reader.onload = function (e) {
                 const img = new Image();
-                img.src = event.target.result;
+                img.src = e.target.result;
                 img.onload = function () {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 400; // Kecilkan ke 400px untuk POS
+                    const MAX_WIDTH = 400;
                     const scaleSize = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH;
                     canvas.height = img.height * scaleSize;
-
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    // Tukar ke JPEG dengan kualiti 0.7 untuk jimat ruang
                     base64Image = canvas.toDataURL('image/jpeg', 0.7);
                     document.getElementById('imagePreview').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
                 };
@@ -158,7 +180,8 @@
 
         document.getElementById('productForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = e.submitter;
+            const editId = document.getElementById('editId').value;
+            const btn = document.getElementById('submitBtn');
             btn.innerText = "SEDANG DISIMPAN...";
             btn.disabled = true;
 
@@ -169,23 +192,23 @@
                 stock: parseInt(document.getElementById('itemStock').value),
                 sku: document.getElementById('itemSku').value,
                 image: base64Image || 'https://via.placeholder.com/150',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             try {
-                await db.collection("inventory").add(data);
+                if (editId) {
+                    await db.collection("inventory").doc(editId).update(data);
+                } else {
+                    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection("inventory").add(data);
+                }
                 toggleModal(false);
-            } catch (err) { 
-                console.error(err);
-                alert("Ralat simpan data! Saiz gambar mungkin terlalu besar atau masalah sambungan."); 
-            } 
-            finally { 
-                btn.innerText = "SIMPAN KE DATABASE"; 
-                btn.disabled = false; 
-            }
+            } catch (err) { alert("Ralat: " + err.message); } 
+            finally { btn.innerText = "Simpan Ke Database"; btn.disabled = false; }
         });
 
-        db.collection("inventory").orderBy("createdAt", "desc").onSnapshot(snap => {
+        // Listen data real-time
+        db.collection("inventory").orderBy("name", "asc").onSnapshot(snap => {
             const table = document.getElementById('inventoryTable');
             table.innerHTML = '';
             let lowCount = 0;
@@ -195,21 +218,17 @@
                 table.innerHTML += `
                 <tr class="border-b border-white/5 hover:bg-white/5 transition group">
                     <td class="p-4 flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden bg-white/5">
-                            <img src="${p.image}" class="w-full h-full object-cover">
-                        </div>
-                        <div>
-                            <p class="font-black uppercase tracking-tight">${p.name}</p>
-                            <p class="text-[8px] text-slate-600 font-bold">SKU: ${p.sku || 'N/A'}</p>
-                        </div>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden bg-white/5"><img src="${p.image}" class="w-full h-full object-cover"></div>
+                        <div><p class="font-black uppercase tracking-tight">${p.name}</p><p class="text-[8px] text-slate-600 font-bold">SKU: ${p.sku || '-'}</p></div>
                     </td>
                     <td class="p-4"><span class="bg-slate-800 px-3 py-1 rounded-md text-[9px] font-bold">${p.category}</span></td>
                     <td class="p-4 text-right font-black text-blue-400">RM ${p.price.toFixed(2)}</td>
+                    <td class="p-4 text-center"><span class="${p.stock <= 5 ? 'text-red-500' : 'text-emerald-500'} font-black text-sm">${p.stock}</span></td>
                     <td class="p-4 text-center">
-                        <span class="${p.stock <= 5 ? 'text-red-500' : 'text-emerald-500'} font-black text-sm">${p.stock}</span>
-                    </td>
-                    <td class="p-4 text-center">
-                        <button onclick="deleteItem('${doc.id}')" class="text-slate-600 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button>
+                        <div class="flex gap-3 justify-center">
+                            <button onclick="editItem('${doc.id}')" class="text-blue-500 hover:text-blue-400"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteItem('${doc.id}')" class="text-slate-600 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
+                        </div>
                     </td>
                 </tr>`;
             });
@@ -217,7 +236,33 @@
             document.getElementById('lowStock').innerText = lowCount;
         });
 
-        async function deleteItem(id) { if(confirm("Padam item ini?")) { await db.collection("inventory").doc(id).delete(); } }
+        async function editItem(id) {
+            const doc = await db.collection("inventory").doc(id).get();
+            const p = doc.data();
+            
+            document.getElementById('modalTitle').innerText = "Edit Produk";
+            document.getElementById('editId').value = id;
+            document.getElementById('itemName').value = p.name;
+            document.getElementById('itemPrice').value = p.price;
+            document.getElementById('itemStock').value = p.stock;
+            document.getElementById('itemSku').value = p.sku;
+            
+            // Check if category exists, if not add it
+            if(!categories.includes(p.category)) {
+                categories.push(p.category);
+                renderCategoryDropdown();
+            }
+            document.getElementById('itemCategory').value = p.category;
+            
+            base64Image = p.image;
+            document.getElementById('imagePreview').innerHTML = `<img src="${p.image}" class="w-full h-full object-cover">`;
+            
+            toggleModal(true);
+        }
+
+        async function deleteItem(id) { if(confirm("Padam item ini secara kekal?")) { await db.collection("inventory").doc(id).delete(); } }
+        
+        loadCategories();
     </script>
 </body>
 </html>
