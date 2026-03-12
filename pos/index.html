@@ -36,17 +36,12 @@
             <input type="text" id="searchInput" oninput="filterProducts()" placeholder="Cari produk..." class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-emerald-500">
         </div>
         
-        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+        <div id="categoryContainer" class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
             <button onclick="filterCategory('ALL')" class="cat-btn active flex-shrink-0 px-5 py-2 glass rounded-xl text-[10px] font-black uppercase border border-white/10">Semua</button>
-            <button onclick="filterCategory('MAKANAN')" class="cat-btn flex-shrink-0 px-5 py-2 glass rounded-xl text-[10px] font-black uppercase border border-white/10">Makanan</button>
-            <button onclick="filterCategory('MINUMAN')" class="cat-btn flex-shrink-0 px-5 py-2 glass rounded-xl text-[10px] font-black uppercase border border-white/10">Minuman</button>
-            <button onclick="filterCategory('SERVIS')" class="cat-btn flex-shrink-0 px-5 py-2 glass rounded-xl text-[10px] font-black uppercase border border-white/10">Servis</button>
-            <button onclick="filterCategory('LAIN-LAIN')" class="cat-btn flex-shrink-0 px-5 py-2 glass rounded-xl text-[10px] font-black uppercase border border-white/10">Lain-lain</button>
         </div>
     </div>
 
-    <div id="productGrid" class="grid grid-cols-2 gap-4 mb-24">
-        </div>
+    <div id="productGrid" class="grid grid-cols-2 gap-4 mb-24"></div>
 
     <div id="cart-overlay" class="fixed inset-0 bg-[#020617] z-[200] translate-y-full transition-transform duration-500 p-6 flex flex-col">
         <div class="flex justify-between items-center mb-8">
@@ -122,15 +117,32 @@
         let paymentMethod = 'Tunai';
         let currentCategory = 'ALL';
 
-        // Load Produk dari Inventory
+        // Load Produk & Kategori dari Inventory
         function loadProducts() {
             db.collection("inventory").onSnapshot(snap => {
                 allProducts = [];
+                const categorySet = new Set(); 
+
                 snap.forEach(doc => {
-                    allProducts.push({ id: doc.id, ...doc.data() });
+                    const data = doc.data();
+                    allProducts.push({ id: doc.id, ...data });
+                    if(data.category) categorySet.add(data.category);
                 });
+
+                renderCategories(Array.from(categorySet));
                 renderProducts();
             });
+        }
+
+        function renderCategories(categories) {
+            const container = document.getElementById('categoryContainer');
+            let html = `<button onclick="filterCategory('ALL')" class="cat-btn ${currentCategory === 'ALL' ? 'active' : ''} flex-shrink-0 px-5 py-2 glass rounded-xl text-[10px] font-black uppercase border border-white/10">Semua</button>`;
+            
+            categories.forEach(cat => {
+                html += `<button onclick="filterCategory('${cat}')" class="cat-btn ${currentCategory === cat ? 'active' : ''} flex-shrink-0 px-5 py-2 glass rounded-xl text-[10px] font-black uppercase border border-white/10">${cat}</button>`;
+            });
+            
+            container.innerHTML = html;
         }
 
         function renderProducts() {
@@ -159,15 +171,16 @@
 
         function filterCategory(cat) {
             currentCategory = cat;
-            document.querySelectorAll('.cat-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.innerText.toUpperCase() === cat || (cat === 'ALL' && btn.innerText === 'Semua'));
-            });
             renderProducts();
+            // Kemaskini gaya butang secara manual tanpa refresh kategori
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                const btnText = btn.innerText === 'SEMUA' ? 'ALL' : btn.innerText;
+                btn.classList.toggle('active', btnText === cat);
+            });
         }
 
         function filterProducts() { renderProducts(); }
 
-        // Fungsi asal dikekalkan
         function setParentNav(s) { if(window.parent) window.parent.postMessage(s === 'hide' ? 'hideNav' : 'showNav', '*'); }
         
         function toggleCart() {
@@ -202,7 +215,13 @@
 
         function showPaymentModal() { if(cart.length > 0) document.getElementById('payment-modal').classList.remove('hidden'); }
         function closePaymentModal() { document.getElementById('payment-modal').classList.add('hidden'); }
-        function setMethod(m) { paymentMethod = m; document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active'); }
+        
+        function setMethod(m) { 
+            paymentMethod = m; 
+            document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active')); 
+            event.currentTarget.classList.add('active'); 
+        }
+
         function calcChange() {
             let total = cart.reduce((acc, item) => acc + item.price, 0) - discount;
             let paid = parseFloat(document.getElementById('amount-paid').value) || 0;
@@ -234,7 +253,6 @@
             } catch(e) { alert("Error: " + e.message); }
         }
 
-        // Jalankan load produk
         loadProducts();
     </script>
 </body>
