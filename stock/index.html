@@ -122,17 +122,38 @@
 
         function toggleModal(show) {
             document.getElementById('addModal').style.display = show ? 'flex' : 'none';
-            if(!show) document.getElementById('productForm').reset();
+            if(!show) {
+                document.getElementById('productForm').reset();
+                document.getElementById('imagePreview').innerHTML = `<i class="fas fa-image text-slate-600 text-2xl"></i>`;
+                base64Image = "";
+            }
         }
 
+        // Fungsi baru untuk mengecilkan saiz gambar
         function previewFile() {
             const file = document.querySelector('input[type=file]').files[0];
+            if (!file) return;
+
             const reader = new FileReader();
-            reader.onloadend = function() {
-                base64Image = reader.result;
-                document.getElementById('imagePreview').innerHTML = `<img src="${reader.result}" class="w-full h-full object-cover">`;
-            }
-            if (file) { reader.readAsDataURL(file); }
+            reader.readAsDataURL(file);
+            reader.onload = function (event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 400; // Kecilkan ke 400px untuk POS
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    // Tukar ke JPEG dengan kualiti 0.7 untuk jimat ruang
+                    base64Image = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('imagePreview').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
+                };
+            };
         }
 
         document.getElementById('productForm').addEventListener('submit', async (e) => {
@@ -154,10 +175,14 @@
             try {
                 await db.collection("inventory").add(data);
                 toggleModal(false);
-                base64Image = "";
-                document.getElementById('imagePreview').innerHTML = `<i class="fas fa-image text-slate-600 text-2xl"></i>`;
-            } catch (err) { alert("Ralat simpan data!"); } 
-            finally { btn.innerText = "SIMPAN KE DATABASE"; btn.disabled = false; }
+            } catch (err) { 
+                console.error(err);
+                alert("Ralat simpan data! Saiz gambar mungkin terlalu besar atau masalah sambungan."); 
+            } 
+            finally { 
+                btn.innerText = "SIMPAN KE DATABASE"; 
+                btn.disabled = false; 
+            }
         });
 
         db.collection("inventory").orderBy("createdAt", "desc").onSnapshot(snap => {
@@ -167,7 +192,26 @@
             snap.forEach(doc => {
                 const p = doc.data();
                 if(p.stock <= 5) lowCount++;
-                table.innerHTML += `<tr class="border-b border-white/5 hover:bg-white/5 transition group"><td class="p-4 flex items-center gap-4"><div class="w-10 h-10 rounded-xl overflow-hidden bg-white/5"><img src="${p.image}" class="w-full h-full object-cover"></div><div><p class="font-black uppercase tracking-tight">${p.name}</p><p class="text-[8px] text-slate-600 font-bold">SKU: ${p.sku || 'N/A'}</p></div></td><td class="p-4"><span class="bg-slate-800 px-3 py-1 rounded-md text-[9px] font-bold">${p.category}</span></td><td class="p-4 text-right font-black text-blue-400">RM ${p.price.toFixed(2)}</td><td class="p-4 text-center"><span class="${p.stock <= 5 ? 'text-red-500' : 'text-emerald-500'} font-black text-sm">${p.stock}</span></td><td class="p-4 text-center"><button onclick="deleteItem('${doc.id}')" class="text-slate-600 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button></td></tr>`;
+                table.innerHTML += `
+                <tr class="border-b border-white/5 hover:bg-white/5 transition group">
+                    <td class="p-4 flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl overflow-hidden bg-white/5">
+                            <img src="${p.image}" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <p class="font-black uppercase tracking-tight">${p.name}</p>
+                            <p class="text-[8px] text-slate-600 font-bold">SKU: ${p.sku || 'N/A'}</p>
+                        </div>
+                    </td>
+                    <td class="p-4"><span class="bg-slate-800 px-3 py-1 rounded-md text-[9px] font-bold">${p.category}</span></td>
+                    <td class="p-4 text-right font-black text-blue-400">RM ${p.price.toFixed(2)}</td>
+                    <td class="p-4 text-center">
+                        <span class="${p.stock <= 5 ? 'text-red-500' : 'text-emerald-500'} font-black text-sm">${p.stock}</span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <button onclick="deleteItem('${doc.id}')" class="text-slate-600 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>`;
             });
             document.getElementById('totalSku').innerText = snap.size;
             document.getElementById('lowStock').innerText = lowCount;
