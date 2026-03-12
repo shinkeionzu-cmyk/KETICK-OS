@@ -1,0 +1,22 @@
+<script>
+    async function exportData(collectionName) {
+        const snapshot = await db.collection(collectionName).get();
+        const data = [];
+        snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup-${collectionName}-${new Date().toISOString()}.json`;
+        a.click();
+    }
+</script>
+
+<div class="p-8 glass rounded-3xl">
+    <h2 class="font-black mb-4">SYSTEM BACKUP</h2>
+    <div class="flex gap-4">
+        <button onclick="exportData('inventory')" class="bg-blue-600 p-4 rounded-xl text-xs font-bold">BACKUP INVENTORY</button>
+        <button onclick="exportData('sales')" class="bg-emerald-600 p-4 rounded-xl text-xs font-bold">BACKUP SALES</button>
+    </div>
+</div>
