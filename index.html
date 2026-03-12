@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KETICK OS | Master Dashboard</title>
+    <title>KETICK OS | ERP System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -11,36 +11,40 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; background: #020617; color: white; }
         .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
         
-        /* FULLSCREEN LOGIC */
+        /* NAVIGATION */
+        .mobile-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            height: 75px; background: rgba(15, 23, 42, 0.95); 
+            backdrop-filter: blur(15px); border-top: 1px solid rgba(255,255,255,0.1); 
+            display: flex; justify-content: space-around; align-items: center; 
+            z-index: 100; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* FLOATING BACK BUTTON */
         #floating-back {
             position: fixed; top: 15px; left: 15px; z-index: 500;
-            width: 42px; height: 42px; background: rgba(59, 130, 246, 0.9);
-            border-radius: 14px; display: none; align-items: center; justify-content: center;
+            width: 40px; height: 40px; background: rgba(59, 130, 246, 0.9);
+            border-radius: 12px; display: none; align-items: center; justify-content: center;
             box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3); border: none;
         }
 
+        /* STATE: FULLSCREEN */
+        .is-fullscreen .mobile-nav { transform: translateY(100%); }
+        .is-fullscreen header { display: none; }
+        .is-fullscreen #app-frame { top: 0; height: 100vh; border-radius: 0; padding-bottom: 0; }
         .is-fullscreen #floating-back { display: flex; }
-        .is-fullscreen header, .is-fullscreen .mobile-nav { display: none !important; }
-        .is-fullscreen #app-frame { top: 0; height: 100vh; border-radius: 0; }
+
+        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #64748b; background: none; border: none; outline: none !important; }
+        .nav-btn.active { color: #3b82f6; }
+        .nav-btn span { font-size: 9px; font-weight: 800; text-transform: uppercase; }
 
         #app-frame { 
             position: absolute; top: 90px; left: 0; width: 100%; height: calc(100vh - 165px);
             border: none; background: #020617; transition: all 0.3s ease; z-index: 10;
         }
 
-        /* PIN SCREEN */
         #security-overlay { position: fixed; inset: 0; z-index: 9999; background: #020617; display: flex; align-items: center; justify-content: center; }
-        .pin-input { width: 55px; height: 70px; text-align: center; font-size: 28px; font-weight: 800; border-radius: 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
-        
-        .mobile-nav { 
-            position: fixed; bottom: 0; left: 0; right: 0; height: 75px; 
-            background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); 
-            border-top: 1px solid rgba(255,255,255,0.05); display: flex; 
-            justify-content: space-around; align-items: center; z-index: 100;
-        }
-        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #64748b; font-size: 18px; }
-        .nav-btn.active { color: #3b82f6; }
-        .nav-btn span { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .pin-input { width: 55px; height: 65px; text-align: center; font-size: 24px; font-weight: 800; border-radius: 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
     </style>
 </head>
 <body id="master-body">
@@ -51,89 +55,73 @@
 
     <div id="security-overlay">
         <div class="max-w-xs w-full p-8 rounded-[3rem] glass text-center border border-white/10">
-            <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/30">
-                <i class="fas fa-lock text-white text-xl"></i>
-            </div>
-            <h2 class="text-xl font-black mb-6 uppercase tracking-tighter">KETICK OS</h2>
+            <h2 class="text-xl font-extrabold mb-6 uppercase tracking-tighter">KETICK ACCESS</h2>
             <div class="flex justify-center gap-3 mb-8">
                 <input type="password" inputmode="numeric" maxlength="1" class="pin-input" autofocus>
                 <input type="password" inputmode="numeric" maxlength="1" class="pin-input">
                 <input type="password" inputmode="numeric" maxlength="1" class="pin-input">
                 <input type="password" inputmode="numeric" maxlength="1" class="pin-input">
             </div>
-            <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Sila Masukkan PIN Akses</p>
+            <button onclick="verifyAccess()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl uppercase text-[10px]">Verify identity</button>
         </div>
     </div>
 
-    <header class="p-6 flex justify-between items-center relative z-20">
+    <header class="p-6 flex justify-between items-center">
         <div>
             <h2 id="moduleTitle" class="text-xl font-black uppercase tracking-tighter text-blue-500">DASHBOARD</h2>
             <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">System Online</p>
         </div>
-        <div class="flex items-center gap-3">
-            <div class="text-right">
-                <p class="text-[9px] font-black uppercase leading-none">Administrator</p>
-                <p class="text-[8px] text-emerald-500 font-bold uppercase">Active</p>
-            </div>
-            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-black">A</div>
-        </div>
+        <img src="https://ui-avatars.com/api/?name=Admin&background=3b82f6" class="w-10 h-10 rounded-2xl">
     </header>
 
-    <main class="relative h-screen">
+    <main class="lg:ml-72 relative h-screen">
         <iframe id="app-frame" class="hidden"></iframe>
         
         <div id="dashboard-view" class="p-4 space-y-4 overflow-y-auto h-full pb-32">
-            <div class="p-8 rounded-[3rem] bg-gradient-to-br from-blue-600 to-indigo-800 shadow-2xl relative overflow-hidden active:scale-95 transition" onclick="loadModule('pos')">
-                <h2 class="text-3xl font-black leading-tight uppercase">Mula<br>Jualan</h2>
+            <div class="p-8 rounded-[3rem] bg-gradient-to-br from-blue-600 to-indigo-800 shadow-2xl relative overflow-hidden" onclick="loadModule('pos')">
+                <h2 class="text-3xl font-black leading-tight">Mula<br>Jualan</h2>
                 <i class="fas fa-bolt absolute right-[-10px] bottom-[-10px] text-8xl opacity-10"></i>
             </div>
             
             <div class="grid grid-cols-2 gap-4">
-                <div class="p-6 glass rounded-[2.5rem] border-blue-500/10" onclick="loadModule('stock')">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase">Stok Semasa</p>
+                <div class="p-6 glass rounded-[2.5rem]" onclick="loadModule('stock')">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase">Stok</p>
                     <h4 id="dash-total-stock" class="text-xl font-black mt-1">...</h4>
                 </div>
-                <div class="p-6 glass rounded-[2.5rem] border-emerald-500/10" onclick="loadModule('sales')">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase">Jualan Hari Ini</p>
+                <div class="p-6 glass rounded-[2.5rem]" onclick="loadModule('sales')">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase">Jualan</p>
                     <h4 id="dash-today-sales" class="text-xl font-black mt-1 text-emerald-400">RM 0.00</h4>
                 </div>
-            </div>
-
-            <div class="p-6 glass rounded-[2.5rem] flex justify-between items-center active:scale-95 transition" onclick="loadModule('my-invoice')">
-                <div>
-                    <h4 class="font-bold text-sm uppercase">Urus Invois</h4>
-                    <p class="text-[9px] text-slate-500 uppercase">Billing & Records</p>
-                </div>
-                <i class="fas fa-file-invoice text-blue-500 text-xl"></i>
             </div>
         </div>
     </main>
 
-    <nav class="mobile-nav">
-        <button onclick="loadModule('dashboard')" class="nav-btn active" id="nav-home"><i class="fas fa-th-large"></i><span>Home</span></button>
+    <nav class="mobile-nav lg:hidden">
+        <button onclick="loadModule('dashboard')" class="nav-btn active"><i class="fas fa-th-large"></i><span>Home</span></button>
         <button onclick="loadModule('pos')" class="nav-btn"><i class="fas fa-cash-register"></i><span>POS</span></button>
-        <button onclick="loadModule('my-invoice')" class="nav-btn"><i class="fas fa-file-invoice-dollar"></i><span>Invoice</span></button>
+        <button onclick="loadModule('sales')" class="nav-btn"><i class="fas fa-shopping-cart"></i><span>Sales</span></button>
         <button onclick="loadModule('stock')" class="nav-btn"><i class="fas fa-boxes"></i><span>Stock</span></button>
-        <button onclick="toggleMoreMenu()" class="nav-btn"><i class="fas fa-grid-2"></i><span>Lain</span></button>
+        <button onclick="toggleMoreMenu()" class="nav-btn"><i class="fas fa-ellipsis-h"></i><span>More</span></button>
     </nav>
 
-    <div id="more-menu" class="fixed inset-0 bg-[#020617]/98 z-[600] hidden p-10 backdrop-blur-2xl">
-        <div class="grid grid-cols-3 gap-y-12 gap-x-6 pt-20 text-center">
-            <div onclick="loadModule('products')" class="flex flex-col items-center gap-3"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-amber-500"><i class="fas fa-tag"></i></div><span class="text-[9px] font-bold uppercase">Produk</span></div>
-            <div onclick="loadModule('bank')" class="flex flex-col items-center gap-3"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-blue-400"><i class="fas fa-university"></i></div><span class="text-[9px] font-bold uppercase">Bank</span></div>
-            <div onclick="loadModule('accounting')" class="flex flex-col items-center gap-3"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-purple-400"><i class="fas fa-calculator"></i></div><span class="text-[9px] font-bold uppercase">Akaun</span></div>
-            <div onclick="loadModule('contact')" class="flex flex-col items-center gap-3"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-orange-400"><i class="fas fa-users"></i></div><span class="text-[9px] font-bold uppercase">CRM</span></div>
-            <div onclick="loadModule('report')" class="flex flex-col items-center gap-3"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-pink-400"><i class="fas fa-chart-bar"></i></div><span class="text-[9px] font-bold uppercase">Laporan</span></div>
-            <div onclick="loadModule('setting')" class="flex flex-col items-center gap-3"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-cog"></i></div><span class="text-[9px] font-bold uppercase">Tetapan</span></div>
+    <div id="more-menu" class="fixed inset-0 bg-[#020617]/98 z-[200] hidden p-10 backdrop-blur-2xl overflow-y-auto">
+        <div class="grid grid-cols-3 gap-y-10 gap-x-6 pt-20 text-center">
+            <div onclick="loadModule('products')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-amber-500"><i class="fas fa-tag"></i></div><span class="text-[9px] font-bold uppercase">Products</span></div>
+            <div onclick="loadModule('bank')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-blue-400"><i class="fas fa-university"></i></div><span class="text-[9px] font-bold uppercase">Bank</span></div>
+            <div onclick="loadModule('accounting')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-purple-400"><i class="fas fa-calculator"></i></div><span class="text-[9px] font-bold uppercase">Account</span></div>
+            <div onclick="loadModule('my-invoice')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-emerald-400"><i class="fas fa-file-invoice"></i></div><span class="text-[9px] font-bold uppercase">Invoice</span></div>
+            <div onclick="loadModule('contact')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-orange-400"><i class="fas fa-users"></i></div><span class="text-[9px] font-bold uppercase">CRM</span></div>
+            <div onclick="loadModule('digital-shoes')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-cyan-400"><i class="fas fa-shoe-prints"></i></div><span class="text-[9px] font-bold uppercase">Digital</span></div>
+            <div onclick="loadModule('report')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-pink-400"><i class="fas fa-chart-bar"></i></div><span class="text-[9px] font-bold uppercase">Reports</span></div>
+            <div onclick="loadModule('setting')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-cog"></i></div><span class="text-[9px] font-bold uppercase">Setting</span></div>
         </div>
-        <button onclick="toggleMoreMenu()" class="absolute bottom-12 left-1/2 -translate-x-1/2 w-16 h-16 bg-white/5 rounded-full flex items-center justify-center border border-white/10"><i class="fas fa-times"></i></button>
+        <button onclick="toggleMoreMenu()" class="mt-16 mx-auto w-16 h-16 bg-red-500/20 rounded-full text-red-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Config Firestore
         const firebaseConfig = {
           apiKey: "AIzaSyCT2nlX1fjiGvXAuaBWein6e1BQOOCH8ew",
           authDomain: "ketick-os.firebaseapp.com",
@@ -145,7 +133,6 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Modul Navigation
         function loadModule(name) {
             const body = document.getElementById('master-body');
             const frame = document.getElementById('app-frame');
@@ -159,32 +146,29 @@
                 frame.classList.add('hidden');
                 dash.classList.remove('hidden');
                 title.innerText = "DASHBOARD";
-                updateNavIcons('dashboard');
             } else {
                 body.classList.add('is-fullscreen'); 
-                // Pastikan nama fail .html sepadan dengan folder anda
-                frame.src = `./${name}.html`; 
+                frame.src = `./${name}/index.html`;
                 frame.classList.remove('hidden');
                 dash.classList.add('hidden');
-                title.innerText = name.toUpperCase().replace('-', ' ');
-                updateNavIcons(name);
+                title.innerText = name.toUpperCase();
             }
         }
 
-        // Statistik Dashboard (Real-time)
+        async function verifyAccess() {
+            let pin = "";
+            document.querySelectorAll('.pin-input').forEach(i => pin += i.value);
+            if(pin === "1234") { document.getElementById('security-overlay').style.display = 'none'; startSync(); }
+            else { alert("PIN SALAH"); document.querySelectorAll('.pin-input').forEach(i => i.value = ""); }
+        }
+
         function startSync() {
             const today = new Date().toISOString().split('T')[0];
-            
-            // Sync Jualan (Koleksi: invoices)
-            db.collection("invoices").onSnapshot(snap => {
+            db.collection("sales").where("date", "==", today).onSnapshot(snap => {
                 let total = 0;
-                snap.forEach(doc => {
-                    if(doc.data().date === today) total += parseFloat(doc.data().totalAmount || 0);
-                });
+                snap.forEach(doc => total += (parseFloat(doc.data().totalValue) || 0));
                 document.getElementById('dash-today-sales').innerText = `RM ${total.toFixed(2)}`;
             });
-
-            // Sync Stok (Koleksi: inventory)
             db.collection("inventory").onSnapshot(snap => {
                 let count = 0;
                 snap.forEach(doc => count += parseInt(doc.data().stock || 0));
@@ -192,39 +176,13 @@
             });
         }
 
-        // Security PIN Logic
-        const inputs = document.querySelectorAll('.pin-input');
-        inputs.forEach((input, index) => {
-            input.addEventListener('input', () => { 
-                if (input.value && index < 3) inputs[index+1].focus(); 
-                if (index === 3 && input.value) verifyAccess(); 
-            });
-            input.addEventListener('keydown', (e) => { 
-                if (e.key === "Backspace" && !input.value && index > 0) inputs[index-1].focus(); 
-            });
-        });
-
-        function verifyAccess() {
-            let pin = "";
-            inputs.forEach(i => pin += i.value);
-            if(pin === "1234") { 
-                document.getElementById('security-overlay').classList.add('hidden'); 
-                startSync(); 
-            } else { 
-                alert("PIN SALAH"); 
-                inputs.forEach(i => i.value = ""); 
-                inputs[0].focus();
-            }
-        }
-
         function toggleMoreMenu() { document.getElementById('more-menu').classList.toggle('hidden'); }
 
-        function updateNavIcons(activeName) {
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if(btn.getAttribute('onclick').includes(`'${activeName}'`)) btn.classList.add('active');
-            });
-        }
+        const inputs = document.querySelectorAll('.pin-input');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', () => { if (input.value && index < 3) inputs[index+1].focus(); if(index === 3 && input.value) verifyAccess(); });
+            input.addEventListener('keydown', (e) => { if (e.key === "Backspace" && !input.value && index > 0) inputs[index-1].focus(); });
+        });
     </script>
 </body>
 </html>
