@@ -26,26 +26,48 @@
         const db = getFirestore(app);
 
         let activeEditId = null;
+        let contactsData = [];
 
-        function listenToInvoices() {
-            const q = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
-            onSnapshot(q, (snapshot) => {
+        // Listen ke Invoices & Contacts
+        function initData() {
+            // Invoices
+            const qInv = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
+            onSnapshot(qInv, (snapshot) => {
                 const invoices = [];
-                snapshot.forEach((doc) => {
-                    invoices.push({ id: doc.id, ...doc.data() });
-                });
+                snapshot.forEach((doc) => invoices.push({ id: doc.id, ...doc.data() }));
                 window.currentInvoices = invoices;
                 renderHistoryUI(invoices);
-                if (!activeEditId) {
-                    updateDocID();
-                }
+                if (!activeEditId) updateDocID();
+            });
+
+            // Contacts (Untuk dropdown)
+            const qCont = query(collection(db, "contacts"), orderBy("name", "asc"));
+            onSnapshot(qCont, (snapshot) => {
+                contactsData = [];
+                const list = document.getElementById('contact-options');
+                list.innerHTML = "";
+                snapshot.forEach((doc) => {
+                    const c = doc.data();
+                    contactsData.push(c);
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    list.appendChild(opt);
+                });
             });
         }
+
+        // Auto-fill phone bila nama dipilih
+        window.syncContactInfo = () => {
+            const selectedName = document.getElementById('custName').value;
+            const contact = contactsData.find(c => c.name === selectedName);
+            if(contact) {
+                document.getElementById('custPhone').value = contact.phone;
+            }
+        };
 
         window.updateDocID = () => {
             const type = document.getElementById('doc-type').value;
             const prefix = type === 'QUOTATION' ? 'QT' : (type === 'RECEIPT' ? 'RC' : 'INV');
-            // Kira dokumen berdasarkan jenis yang sama untuk elak nombor melompat jauh
             const sameTypeDocs = window.currentInvoices?.filter(d => (d.docType || 'INVOICE') === type) || [];
             const nextId = String(sameTypeDocs.length + 1).padStart(4, '0');
             document.getElementById('doc-id').innerText = `${prefix}-2026-${nextId}`;
@@ -80,24 +102,21 @@
                     payload.createdAt = serverTimestamp();
                     await addDoc(collection(db, "invoices"), payload);
                 }
-                return true; // Berhasil
+                return true;
             } catch (e) {
                 console.error("Ralat: ", e);
-                alert("Gagal menyimpan data.");
                 return false;
             }
         };
 
         window.deleteInvoice = async (id) => {
             if(confirm("Padam rekod ini?")) {
-                try {
-                    await deleteDoc(doc(db, "invoices", id));
-                } catch (e) { alert("Ralat: " + e.message); }
+                try { await deleteDoc(doc(db, "invoices", id)); } catch (e) { alert(e.message); }
             }
         };
 
         window.setActiveEdit = (id) => { activeEditId = id; };
-        listenToInvoices();
+        initData();
     </script>
 
     <style>
@@ -115,7 +134,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h1 class="text-xl font-black uppercase tracking-widest text-blue-500">Ketick Billing</h1>
-                    <p class="text-[9px] text-slate-500 font-bold tracking-widest uppercase">Direct Sync Mode</p>
+                    <p class="text-[9px] text-slate-500 font-bold tracking-widest uppercase">CRM Integrated</p>
                 </div>
                 <select id="doc-type" onchange="updateUIForType()" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-bold uppercase outline-none">
                     <option value="INVOICE">Invoice</option>
@@ -134,9 +153,6 @@
             <div class="no-print flex gap-2 mb-4 justify-end">
                 <button onclick="resetForm()" class="bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-700 transition">
                     <i class="fas fa-file-plus mr-1"></i> BARU
-                </button>
-                <button onclick="window.print()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-600 transition">
-                    <i class="fas fa-print mr-1"></i> CETAK
                 </button>
                 <button onclick="generatePDF(true)" class="bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold transition hover:bg-blue-500 shadow-lg shadow-blue-500/20">
                     <i class="fas fa-save mr-1"></i> <span id="save-btn-text">SIMPAN & PDF</span>
@@ -160,7 +176,8 @@
                 <div class="grid grid-cols-2 gap-8 mb-10 text-sm">
                     <div>
                         <p class="text-[9px] font-bold text-blue-500 uppercase tracking-widest mb-2">Kepada:</p>
-                        <input type="text" id="custName" placeholder="Nama Pelanggan" class="w-full bg-transparent font-bold outline-none border-b border-dashed border-slate-700 pb-1 mb-1">
+                        <input type="text" id="custName" list="contact-options" oninput="syncContactInfo()" placeholder="Pilih atau Taip Nama" class="w-full bg-transparent font-bold outline-none border-b border-dashed border-slate-700 pb-1 mb-1">
+                        <datalist id="contact-options"></datalist>
                         <input type="text" id="custPhone" placeholder="No. Tel" class="w-full bg-transparent text-[11px] outline-none border-b border-dashed border-slate-700 opacity-60">
                     </div>
                     <div class="text-right">
@@ -213,9 +230,7 @@
             const type = document.getElementById('doc-type').value;
             const titleEl = document.getElementById('display-doc-title');
             const stamp = document.getElementById('receipt-stamp');
-            
             titleEl.innerText = type;
-            
             if(type === 'QUOTATION') {
                 titleEl.className = "text-3xl font-black uppercase tracking-tighter text-amber-500";
                 stamp.classList.add('hidden');
@@ -226,7 +241,6 @@
                 titleEl.className = "text-3xl font-black uppercase tracking-tighter text-slate-300";
                 stamp.classList.add('hidden');
             }
-            
             if(typeof window.updateDocID === 'function') window.updateDocID();
         }
 
@@ -239,9 +253,9 @@
 
         function calculateTotal() {
             let total = 0;
-            const qtys = document.querySelectorAll('.qty');
-            const prices = document.querySelectorAll('.price');
-            qtys.forEach((qty, i) => total += (parseFloat(qty.value || 0) * parseFloat(prices[i].value || 0)));
+            document.querySelectorAll('.qty').forEach((qty, i) => {
+                total += (parseFloat(qty.value || 0) * parseFloat(document.querySelectorAll('.price')[i].value || 0));
+            });
             document.getElementById('grand-total').innerText = total.toFixed(2);
         }
 
@@ -262,14 +276,13 @@
             document.getElementById('item-list').innerHTML = '';
             addItem();
             calculateTotal();
-            window.updateDocID(); // Auto-update nombor siri baru
+            window.updateDocID();
             document.getElementById('save-btn-text').innerText = "SIMPAN & PDF";
         }
 
         async function generatePDF(shouldSave = false) {
             const invNo = document.getElementById('doc-id').innerText;
             const element = document.getElementById('document-area');
-            
             if(shouldSave) {
                 const success = await window.saveToFirestore({
                     invoiceNo: invNo,
@@ -278,10 +291,8 @@
                     totalAmount: document.getElementById('grand-total').innerText,
                     date: document.getElementById('doc-date').value
                 });
-                
                 if(!success) return;
             }
-
             const opt = {
                 margin: 10,
                 filename: `KETICK_${invNo}.pdf`,
@@ -289,10 +300,7 @@
                 html2canvas: { scale: 2, backgroundColor: '#020617' },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-            
-            html2pdf().set(opt).from(element).save().then(() => {
-                if(shouldSave) resetForm(); // Kosongkan borang hanya selepas PDF selesai
-            });
+            html2pdf().set(opt).from(element).save().then(() => { if(shouldSave) resetForm(); });
         }
 
         window.renderHistoryUI = (invoices) => {
@@ -301,12 +309,7 @@
                 container.innerHTML = '<p class="col-span-full text-center py-20 opacity-30 text-xs uppercase tracking-widest">Tiada Rekod</p>';
                 return;
             }
-            container.innerHTML = invoices.map(inv => {
-                let color = 'text-blue-400';
-                if(inv.docType === 'QUOTATION') color = 'text-amber-500';
-                if(inv.docType === 'RECEIPT') color = 'text-emerald-500';
-                
-                return `
+            container.innerHTML = invoices.map(inv => `
                 <div class="glass p-6 rounded-[2rem] border border-white/5 flex flex-col gap-4">
                     <div class="flex justify-between items-start">
                         <div>
@@ -314,14 +317,14 @@
                             <h4 class="font-bold text-lg uppercase tracking-tight">${inv.customerName}</h4>
                             <p class="text-[10px] opacity-40 font-mono">${inv.invoiceNo} • ${inv.date}</p>
                         </div>
-                        <span class="text-xl font-black ${color} font-mono text-right leading-none">RM ${inv.totalAmount}</span>
+                        <span class="text-xl font-black ${inv.docType === 'QUOTATION' ? 'text-amber-500' : (inv.docType === 'RECEIPT' ? 'text-emerald-500' : 'text-blue-400')} font-mono text-right leading-none">RM ${inv.totalAmount}</span>
                     </div>
                     <div class="flex gap-2 border-t border-white/5 pt-4">
                         <button onclick="editInvoice('${inv.id}')" class="flex-1 bg-white/5 py-3 rounded-xl text-[9px] font-bold uppercase hover:bg-blue-600 transition">Buka</button>
                         <button onclick="deleteInvoice('${inv.id}')" class="bg-red-900/10 text-red-500 px-4 rounded-xl hover:bg-red-600 hover:text-white transition"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
-            `}).join('');
+            `).join('');
         };
 
         window.editInvoice = (id) => {
@@ -330,7 +333,6 @@
             window.setActiveEdit(id);
             document.getElementById('doc-type').value = inv.docType || 'INVOICE';
             updateUIForType();
-            
             document.getElementById('save-btn-text').innerText = "KEMASKINI & PDF";
             document.getElementById('doc-id').innerText = inv.invoiceNo;
             document.getElementById('custName').value = inv.customerName;
