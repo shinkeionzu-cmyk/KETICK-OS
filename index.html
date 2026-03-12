@@ -11,37 +11,36 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; background: #020617; color: white; }
         .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
         
-        /* NAVIGATION ANIMATION */
+        /* NAVIGATION */
         .mobile-nav { 
             position: fixed; bottom: 0; left: 0; right: 0; 
             height: 75px; background: rgba(15, 23, 42, 0.95); 
             backdrop-filter: blur(15px); border-top: 1px solid rgba(255,255,255,0.1); 
             display: flex; justify-content: space-around; align-items: center; 
-            z-index: 100; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* FLOATING BACK BUTTON */
         #floating-back {
-            position: fixed; top: 20px; left: 20px; z-index: 500;
-            width: 45px; height: 45px; background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 15px; display: none; align-items: center; justify-content: center;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            position: fixed; top: 15px; left: 15px; z-index: 500;
+            width: 40px; height: 40px; background: rgba(59, 130, 246, 0.9);
+            border-radius: 12px; display: none; align-items: center; justify-content: center;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3); border: none;
         }
 
-        /* STATE: FULLSCREEN MODE */
-        .is-fullscreen .mobile-nav { transform: translateY(100%); opacity: 0; pointer-events: none; }
-        .is-fullscreen header { transform: translateY(-100%); opacity: 0; pointer-events: none; }
-        .is-fullscreen #app-frame { top: 0 !important; height: 100vh !important; border-radius: 0 !important; }
+        /* STATE: FULLSCREEN */
+        .is-fullscreen .mobile-nav { transform: translateY(100%); }
+        .is-fullscreen header { display: none; }
+        .is-fullscreen #app-frame { top: 0; height: 100vh; border-radius: 0; padding-bottom: 0; }
         .is-fullscreen #floating-back { display: flex; }
 
-        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #64748b; background: none; border: none; }
+        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #64748b; background: none; border: none; outline: none !important; }
         .nav-btn.active { color: #3b82f6; }
         .nav-btn span { font-size: 9px; font-weight: 800; text-transform: uppercase; }
 
         #app-frame { 
-            position: absolute; top: 85px; left: 0; width: 100%; height: calc(100vh - 160px);
-            border: none; background: #020617; transition: all 0.4s ease; z-index: 10;
+            position: absolute; top: 90px; left: 0; width: 100%; height: calc(100vh - 165px);
+            border: none; background: #020617; transition: all 0.3s ease; z-index: 10;
         }
 
         #security-overlay { position: fixed; inset: 0; z-index: 9999; background: #020617; display: flex; align-items: center; justify-content: center; }
@@ -51,7 +50,7 @@
 <body id="master-body">
 
     <button id="floating-back" onclick="loadModule('dashboard')">
-        <i class="fas fa-arrow-left text-white"></i>
+        <i class="fas fa-chevron-left text-white"></i>
     </button>
 
     <div id="security-overlay">
@@ -63,11 +62,11 @@
                 <input type="password" inputmode="numeric" maxlength="1" class="pin-input">
                 <input type="password" inputmode="numeric" maxlength="1" class="pin-input">
             </div>
-            <button onclick="verifyAccess()" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white">Unlock System</button>
+            <button onclick="verifyAccess()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl uppercase text-[10px]">Verify identity</button>
         </div>
     </div>
 
-    <header class="p-6 flex justify-between items-center transition-all duration-300">
+    <header class="p-6 flex justify-between items-center">
         <div>
             <h2 id="moduleTitle" class="text-xl font-black uppercase tracking-tighter text-blue-500">DASHBOARD</h2>
             <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">System Online</p>
@@ -79,18 +78,18 @@
         <iframe id="app-frame" class="hidden"></iframe>
         
         <div id="dashboard-view" class="p-4 space-y-4 overflow-y-auto h-full pb-32">
-            <div class="p-8 rounded-[3rem] bg-gradient-to-br from-blue-600 to-indigo-800 shadow-2xl relative overflow-hidden group" onclick="loadModule('pos')">
-                <h2 class="text-3xl font-black leading-tight text-white">Mula<br>Jualan</h2>
+            <div class="p-8 rounded-[3rem] bg-gradient-to-br from-blue-600 to-indigo-800 shadow-2xl relative overflow-hidden" onclick="loadModule('pos')">
+                <h2 class="text-3xl font-black leading-tight">Mula<br>Jualan</h2>
                 <i class="fas fa-bolt absolute right-[-10px] bottom-[-10px] text-8xl opacity-10"></i>
             </div>
             
-            <div class="grid grid-cols-2 gap-4 text-white">
+            <div class="grid grid-cols-2 gap-4">
                 <div class="p-6 glass rounded-[2.5rem]" onclick="loadModule('stock')">
                     <p class="text-[10px] font-bold text-slate-500 uppercase">Stok</p>
                     <h4 id="dash-total-stock" class="text-xl font-black mt-1">...</h4>
                 </div>
                 <div class="p-6 glass rounded-[2.5rem]" onclick="loadModule('sales')">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase">Jualan Hari Ini</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase">Jualan</p>
                     <h4 id="dash-today-sales" class="text-xl font-black mt-1 text-emerald-400">RM 0.00</h4>
                 </div>
             </div>
@@ -101,15 +100,22 @@
         <button onclick="loadModule('dashboard')" class="nav-btn active"><i class="fas fa-th-large"></i><span>Home</span></button>
         <button onclick="loadModule('pos')" class="nav-btn"><i class="fas fa-cash-register"></i><span>POS</span></button>
         <button onclick="loadModule('sales')" class="nav-btn"><i class="fas fa-shopping-cart"></i><span>Sales</span></button>
+        <button onclick="loadModule('stock')" class="nav-btn"><i class="fas fa-boxes"></i><span>Stock</span></button>
         <button onclick="toggleMoreMenu()" class="nav-btn"><i class="fas fa-ellipsis-h"></i><span>More</span></button>
     </nav>
 
-    <div id="more-menu" class="fixed inset-0 bg-[#020617]/95 z-[200] hidden p-10 backdrop-blur-2xl">
-        <div class="grid grid-cols-3 gap-6 pt-20">
+    <div id="more-menu" class="fixed inset-0 bg-[#020617]/98 z-[200] hidden p-10 backdrop-blur-2xl overflow-y-auto">
+        <div class="grid grid-cols-3 gap-y-10 gap-x-6 pt-20 text-center">
+            <div onclick="loadModule('products')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-amber-500"><i class="fas fa-tag"></i></div><span class="text-[9px] font-bold uppercase">Products</span></div>
             <div onclick="loadModule('bank')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-blue-400"><i class="fas fa-university"></i></div><span class="text-[9px] font-bold uppercase">Bank</span></div>
+            <div onclick="loadModule('accounting')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-purple-400"><i class="fas fa-calculator"></i></div><span class="text-[9px] font-bold uppercase">Account</span></div>
+            <div onclick="loadModule('my-invoice')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-emerald-400"><i class="fas fa-file-invoice"></i></div><span class="text-[9px] font-bold uppercase">Invoice</span></div>
+            <div onclick="loadModule('contact')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-orange-400"><i class="fas fa-users"></i></div><span class="text-[9px] font-bold uppercase">CRM</span></div>
+            <div onclick="loadModule('digital-shoes')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-cyan-400"><i class="fas fa-shoe-prints"></i></div><span class="text-[9px] font-bold uppercase">Digital</span></div>
+            <div onclick="loadModule('report')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-pink-400"><i class="fas fa-chart-bar"></i></div><span class="text-[9px] font-bold uppercase">Reports</span></div>
             <div onclick="loadModule('setting')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 glass rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-cog"></i></div><span class="text-[9px] font-bold uppercase">Setting</span></div>
-            </div>
-        <button onclick="toggleMoreMenu()" class="absolute bottom-10 left-1/2 -translate-x-1/2 w-16 h-16 bg-red-500/20 rounded-full text-red-500"><i class="fas fa-times"></i></button>
+        </div>
+        <button onclick="toggleMoreMenu()" class="mt-16 mx-auto w-16 h-16 bg-red-500/20 rounded-full text-red-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -140,9 +146,8 @@
                 frame.classList.add('hidden');
                 dash.classList.remove('hidden');
                 title.innerText = "DASHBOARD";
-                updateNavIcons(0);
             } else {
-                body.classList.add('is-fullscreen'); // Aktifkan mod paparan penuh
+                body.classList.add('is-fullscreen'); 
                 frame.src = `./${name}/index.html`;
                 frame.classList.remove('hidden');
                 dash.classList.add('hidden');
@@ -150,36 +155,29 @@
             }
         }
 
-        function updateNavIcons(idx) {
-            document.querySelectorAll('.nav-btn').forEach((b, i) => {
-                b.classList.toggle('active', i === idx);
-            });
-        }
-
-        function toggleMoreMenu() { document.getElementById('more-menu').classList.toggle('hidden'); }
-
         async function verifyAccess() {
             let pin = "";
             document.querySelectorAll('.pin-input').forEach(i => pin += i.value);
-            if(pin === "1234") { 
-                document.getElementById('security-overlay').style.display = 'none'; 
-                startSync(); 
-            } else {
-                alert("PIN SALAH");
-                document.querySelectorAll('.pin-input').forEach(i => i.value = "");
-            }
+            if(pin === "1234") { document.getElementById('security-overlay').style.display = 'none'; startSync(); }
+            else { alert("PIN SALAH"); document.querySelectorAll('.pin-input').forEach(i => i.value = ""); }
         }
 
         function startSync() {
             const today = new Date().toISOString().split('T')[0];
             db.collection("sales").where("date", "==", today).onSnapshot(snap => {
                 let total = 0;
-                snap.forEach(doc => total += (parseFloat(doc.data().totalPrice) || 0));
+                snap.forEach(doc => total += (parseFloat(doc.data().totalValue) || 0));
                 document.getElementById('dash-today-sales').innerText = `RM ${total.toFixed(2)}`;
+            });
+            db.collection("inventory").onSnapshot(snap => {
+                let count = 0;
+                snap.forEach(doc => count += parseInt(doc.data().stock || 0));
+                document.getElementById('dash-total-stock').innerText = `${count} Unit`;
             });
         }
 
-        // Pin Input Auto-focus
+        function toggleMoreMenu() { document.getElementById('more-menu').classList.toggle('hidden'); }
+
         const inputs = document.querySelectorAll('.pin-input');
         inputs.forEach((input, index) => {
             input.addEventListener('input', () => { if (input.value && index < 3) inputs[index+1].focus(); if(index === 3 && input.value) verifyAccess(); });
