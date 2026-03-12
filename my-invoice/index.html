@@ -5,158 +5,361 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoicing | KETICK OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCT2nlX1fjiGvXAuaBWein6e1BQOOCH8ew",
+            authDomain: "ketick-os.firebaseapp.com",
+            projectId: "ketick-os",
+            storageBucket: "ketick-os.firebasestorage.app",
+            messagingSenderId: "407192673747",
+            appId: "1:407192673747:web:9196c8d72d77a642f02326",
+            measurementId: "G-YH99RHS74G"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let activeEditId = null;
+
+        window.loginUser = async () => {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const btn = document.querySelector('#auth-screen button');
+            btn.innerText = "MEMPROSES...";
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (error) {
+                alert("Ralat: " + error.message);
+                btn.innerText = "LOG MASUK";
+            }
+        };
+
+        window.logoutUser = () => signOut(auth);
+
+        window.saveToFirestore = async (data) => {
+            try {
+                const items = [];
+                document.querySelectorAll('#item-list tr').forEach(tr => {
+                    items.push({
+                        desc: tr.querySelector('input[type="text"]').value,
+                        qty: tr.querySelector('.qty').value,
+                        price: tr.querySelector('.price').value
+                    });
+                });
+
+                const payload = {
+                    ...data,
+                    items: items,
+                    userId: auth.currentUser.uid,
+                    updatedAt: serverTimestamp()
+                };
+
+                if (activeEditId) {
+                    await updateDoc(doc(db, "invoices", activeEditId), payload);
+                    activeEditId = null;
+                    document.getElementById('save-btn-text').innerText = "SIMPAN & PDF";
+                } else {
+                    payload.createdAt = serverTimestamp();
+                    await addDoc(collection(db, "invoices"), payload);
+                }
+            } catch (e) {
+                console.error("Ralat Firestore: ", e);
+                alert("Gagal menyimpan data.");
+            }
+        };
+
+        window.deleteInvoice = async (id) => {
+            if(confirm("Adakah anda pasti mahu memadam rekod ini?")) {
+                try {
+                    await deleteDoc(doc(db, "invoices", id));
+                } catch (e) {
+                    alert("Ralat memadam: " + e.message);
+                }
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            const authScreen = document.getElementById('auth-screen');
+            const mainApp = document.getElementById('main-app');
+            if (user) {
+                authScreen.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                document.getElementById('user-display').innerText = user.email;
+                listenToInvoices();
+            } else {
+                authScreen.classList.remove('hidden');
+                mainApp.classList.add('hidden');
+            }
+        });
+
+        function listenToInvoices() {
+            const q = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
+            onSnapshot(q, (snapshot) => {
+                const invoices = [];
+                snapshot.forEach((doc) => {
+                    invoices.push({ id: doc.id, ...doc.data() });
+                });
+                window.currentInvoices = invoices;
+                renderHistoryUI(invoices);
+                if (!activeEditId) {
+                    const nextId = String(invoices.length + 1).padStart(4, '0');
+                    document.getElementById('doc-id').innerText = `INV-2026-${nextId}`;
+                }
+            });
+        }
+
+        window.setActiveEdit = (id) => { activeEditId = id; };
+    </script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; padding-bottom: 50px; }
         .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .input-box { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; font-size: 13px; color: white; outline: none; }
-        .input-box:focus { border-color: #3b82f6; }
-        @media print { .no-print { display: none; } body { background: white; color: black; } .glass { border: none; background: none; } }
+        .tab-active { background: #3b82f6; opacity: 1 !important; }
+        .auth-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        @media print { .no-print { display: none !important; } body { background: white; color: black; padding: 0; } .glass { border: none; background: transparent; } }
     </style>
 </head>
 <body class="p-4 lg:p-8">
 
-    <div class="no-print mb-8">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-black uppercase">Billing Creator</h1>
-            <button onclick="window.print()" class="bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold"><i class="fas fa-print mr-2"></i> CETAK / PDF</button>
-        </div>
-        
-        <div class="flex gap-2 p-1 glass rounded-2xl">
-            <button onclick="setType('INVOICE')" id="btn-inv" class="flex-1 py-2 rounded-xl bg-blue-600 text-[10px] font-bold">INVOICE</button>
-            <button onclick="setType('QUOTATION')" id="btn-quo" class="flex-1 py-2 rounded-xl text-[10px] font-bold opacity-50">QUOTATION</button>
-            <button onclick="setType('OFFICIAL RECEIPT')" id="btn-rec" class="flex-1 py-2 rounded-xl text-[10px] font-bold opacity-50">RECEIPT</button>
+    <div id="auth-screen" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#020617]">
+        <div class="auth-card w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl text-center border-blue-500/20 border">
+            <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-bolt text-white text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 uppercase tracking-tighter text-blue-500">Ketick OS</h2>
+            <p class="text-slate-400 text-xs mb-8 uppercase tracking-widest font-bold">Billing Cloud System</p>
+            <div class="space-y-4">
+                <input type="email" id="login-email" placeholder="Emel Pentadbir" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none focus:border-blue-500 transition text-sm">
+                <input type="password" id="login-pass" placeholder="Kata Laluan" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none focus:border-blue-500 transition text-sm">
+                <button onclick="loginUser()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold hover:bg-blue-500 transition active:scale-95 text-xs uppercase tracking-widest">Log Masuk</button>
+            </div>
         </div>
     </div>
 
-    <div id="document-area" class="glass p-6 lg:p-10 rounded-[2.5rem] shadow-2xl overflow-hidden relative">
-        <div class="flex justify-between items-start mb-8">
-            <div>
-                <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-4">
-                    <i class="fas fa-bolt text-white text-xl"></i>
+    <div id="main-app" class="hidden">
+        <div class="no-print mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-xl font-black uppercase tracking-widest">Billing Creator</h1>
+                    <p class="text-[10px] text-slate-500 font-bold tracking-tighter"><span id="user-display">...</span></p>
                 </div>
-                <h2 class="text-2xl font-black text-blue-500">KETICK OS</h2>
-                <p class="text-[10px] text-slate-500 font-bold">DIGITAL BUSINESS SOLUTION</p>
-            </div>
-            <div class="text-right">
-                <h3 id="doc-type-label" class="text-3xl font-black text-slate-300">INVOICE</h3>
-                <p class="text-xs text-slate-500 font-mono" id="doc-id">#INV-2026-0001</p>
-            </div>
-        </div>
-
-        <hr class="border-slate-800 mb-8 opacity-50">
-
-        <div class="grid grid-cols-2 gap-8 mb-10">
-            <div>
-                <p class="text-[9px] font-bold text-blue-500 uppercase tracking-widest mb-2">Kepada:</p>
-                <input type="text" placeholder="Nama Pelanggan" class="w-full bg-transparent font-bold text-sm outline-none border-b border-dashed border-slate-700 pb-1 mb-1">
-                <input type="text" placeholder="Alamat / No. Tel" class="w-full bg-transparent text-[11px] outline-none border-b border-dashed border-slate-700 opacity-60">
-            </div>
-            <div class="text-right">
-                <p class="text-[9px] font-bold text-blue-500 uppercase tracking-widest mb-2">Tarikh:</p>
-                <input type="date" id="doc-date" class="bg-transparent font-bold text-xs outline-none text-right">
-            </div>
-        </div>
-
-        <div class="mb-10 overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="text-[9px] font-black text-slate-500 border-b border-slate-800">
-                        <th class="pb-3 uppercase">Item / Deskripsi</th>
-                        <th class="pb-3 uppercase text-center w-16">Unit</th>
-                        <th class="pb-3 uppercase text-right">Harga (RM)</th>
-                    </tr>
-                </thead>
-                <tbody id="item-list">
-                    <tr class="border-b border-slate-800/50">
-                        <td class="py-4">
-                            <input type="text" value="Sneakers Alpha v1" class="bg-transparent text-sm font-semibold w-full outline-none">
-                        </td>
-                        <td class="py-4 text-center">
-                            <input type="number" value="1" oninput="calculateTotal()" class="bg-transparent text-sm text-center w-full outline-none qty">
-                        </td>
-                        <td class="py-4 text-right">
-                            <input type="number" value="150.00" oninput="calculateTotal()" class="bg-transparent text-sm text-right w-full outline-none price">
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <button onclick="addItem()" class="no-print mt-4 text-[10px] font-bold text-blue-500 uppercase"><i class="fas fa-plus mr-1"></i> Tambah Item</button>
-        </div>
-
-        <div class="flex justify-end">
-            <div class="w-full lg:w-64 space-y-3">
-                <div class="flex justify-between text-xs opacity-60">
-                    <span>Subtotal</span>
-                    <span>RM <span id="sub-total">150.00</span></span>
-                </div>
-                <div class="flex justify-between text-lg font-black text-emerald-500 border-t border-slate-800 pt-3">
-                    <span>JUMLAH</span>
-                    <span>RM <span id="grand-total">150.00</span></span>
+                <div class="flex gap-2">
+                    <button onclick="window.location.reload()" class="bg-white/5 text-slate-400 w-10 h-10 rounded-xl transition hover:bg-blue-600 hover:text-white">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button onclick="logoutUser()" class="bg-red-900/20 text-red-500 w-10 h-10 rounded-xl transition hover:bg-red-500 hover:text-white">
+                        <i class="fas fa-power-off"></i>
+                    </button>
                 </div>
             </div>
+            
+            <div class="flex gap-2 p-1 glass rounded-2xl mb-6">
+                <button onclick="switchTab('creator')" id="tab-creator" class="tab-active flex-1 py-2 rounded-xl text-[10px] font-bold transition">PENYEDIAAN</button>
+                <button onclick="switchTab('history')" id="tab-history" class="flex-1 py-2 rounded-xl text-[10px] font-bold opacity-50 transition">REKOD JUALAN</button>
+            </div>
         </div>
 
-        <div class="mt-12">
-            <p class="text-[10px] text-slate-500 italic">Terima kasih atas urusan anda. Sila buat bayaran ke AKAUN BANK KETICK (CIMB: 1234567890).</p>
+        <div id="section-creator">
+            <div class="no-print flex gap-2 mb-4 justify-end">
+                <button onclick="window.print()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition hover:bg-slate-600">
+                    <i class="fas fa-print mr-1"></i> CETAK
+                </button>
+                <button onclick="prepareWhatsApp()" class="bg-emerald-600 px-4 py-2 rounded-xl text-xs font-bold transition hover:bg-emerald-500">
+                    <i class="fab fa-whatsapp mr-1"></i> WA
+                </button>
+                <button onclick="generatePDF(true)" class="bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold transition hover:bg-blue-500">
+                    <i class="fas fa-save mr-1"></i> <span id="save-btn-text">SIMPAN & PDF</span>
+                </button>
+            </div>
+
+            <div id="document-area" class="glass p-6 lg:p-10 rounded-[2.5rem] shadow-2xl relative border border-white/5">
+                <div class="flex justify-between items-start mb-8">
+                    <div>
+                        <input type="text" id="bizName" value="KETICK OS" class="bg-transparent text-2xl font-black text-blue-500 outline-none w-full">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Digital Business Solution</p>
+                    </div>
+                    <div class="text-right">
+                        <h3 id="doc-type-label" class="text-3xl font-black text-slate-300 uppercase">Invoice</h3>
+                        <p class="text-xs text-slate-500 font-mono" id="doc-id">INV-2026-0001</p>
+                    </div>
+                </div>
+                
+                <hr class="border-slate-800 mb-8 opacity-50">
+
+                <div class="grid grid-cols-2 gap-8 mb-10 text-sm">
+                    <div>
+                        <p class="text-[9px] font-bold text-blue-500 uppercase tracking-widest mb-2">Kepada:</p>
+                        <input type="text" id="custName" placeholder="Nama Pelanggan" class="w-full bg-transparent font-bold outline-none border-b border-dashed border-slate-700 pb-1 mb-1">
+                        <input type="text" id="custPhone" placeholder="No. Tel" class="w-full bg-transparent text-[11px] outline-none border-b border-dashed border-slate-700 opacity-60">
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[9px] font-bold text-blue-500 uppercase tracking-widest mb-2">Tarikh:</p>
+                        <input type="date" id="doc-date" class="bg-transparent font-bold text-xs outline-none text-right">
+                    </div>
+                </div>
+
+                <div class="mb-10 overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-[9px] font-black text-slate-500 border-b border-slate-800 uppercase">
+                                <th class="pb-3">Item</th>
+                                <th class="pb-3 text-center w-16">Unit</th>
+                                <th class="pb-3 text-right">Harga (RM)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="item-list">
+                            <tr class="border-b border-slate-800/50">
+                                <td class="py-4"><input type="text" placeholder="Deskripsi..." class="bg-transparent text-sm font-semibold w-full outline-none text-slate-300"></td>
+                                <td class="py-4 text-center"><input type="number" value="1" oninput="calculateTotal()" class="bg-transparent text-sm text-center w-full outline-none qty text-slate-300"></td>
+                                <td class="py-4 text-right"><input type="number" value="0.00" oninput="calculateTotal()" class="bg-transparent text-sm text-right w-full outline-none price text-slate-300"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button onclick="addItem()" class="no-print mt-4 text-[10px] font-bold text-blue-500 uppercase active:scale-95">
+                        <i class="fas fa-plus mr-1"></i> Tambah Baris
+                    </button>
+                </div>
+
+                <div class="flex justify-end pt-6 border-t border-slate-800">
+                    <div class="text-right">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-1 tracking-widest">Jumlah Perlu Dibayar</p>
+                        <h2 class="text-3xl font-black text-emerald-500">RM <span id="grand-total">0.00</span></h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-history" class="hidden">
+            <div class="space-y-4" id="history-container"></div>
         </div>
     </div>
 
     <script>
-        // Set tarikh harini secara automatik
         document.getElementById('doc-date').valueAsDate = new Date();
 
-        function setType(type) {
-            document.getElementById('doc-type-label').innerText = type;
-            const prefix = type === 'INVOICE' ? 'INV' : type === 'QUOTATION' ? 'QUO' : 'REC';
-            document.getElementById('doc-id').innerText = `#${prefix}-2026-0001`;
-            
-            // UI Button Active
-            document.querySelectorAll('.flex.gap-2.p-1 button').forEach(btn => btn.classList.add('opacity-50', 'bg-transparent'));
-            event.target.classList.remove('opacity-50', 'bg-transparent');
-            event.target.classList.add('bg-blue-600');
-        }
-
-        function addItem() {
-            const row = `<tr class="border-b border-slate-800/50">
-                <td class="py-4"><input type="text" placeholder="Item baru..." class="bg-transparent text-sm font-semibold w-full outline-none"></td>
-                <td class="py-4 text-center"><input type="number" value="1" oninput="calculateTotal()" class="bg-transparent text-sm text-center w-full outline-none qty"></td>
-                <td class="py-4 text-right"><input type="number" value="0.00" oninput="calculateTotal()" class="bg-transparent text-sm text-right w-full outline-none price"></td>
-            </tr>`;
-            document.getElementById('item-list').insertAdjacentHTML('beforeend', row);
+        function switchTab(tab) {
+            document.getElementById('section-creator').classList.toggle('hidden', tab !== 'creator');
+            document.getElementById('section-history').classList.toggle('hidden', tab !== 'history');
+            document.getElementById('tab-creator').classList.toggle('tab-active', tab === 'creator');
+            document.getElementById('tab-history').classList.toggle('tab-active', tab === 'history');
         }
 
         function calculateTotal() {
             let total = 0;
             const qtys = document.querySelectorAll('.qty');
             const prices = document.querySelectorAll('.price');
-            
-            qtys.forEach((qty, i) => {
-                total += (qty.value * prices[i].value);
-            });
-
-            document.getElementById('sub-total').innerText = total.toFixed(2);
+            qtys.forEach((qty, i) => total += (parseFloat(qty.value || 0) * parseFloat(prices[i].value || 0)));
             document.getElementById('grand-total').innerText = total.toFixed(2);
+        }
+
+        function addItem(desc = "", qty = 1, price = "0.00") {
+            const row = `<tr class="border-b border-slate-800/50">
+                <td class="py-4"><input type="text" value="${desc}" placeholder="Deskripsi..." class="bg-transparent text-sm font-semibold w-full outline-none text-slate-300"></td>
+                <td class="py-4 text-center"><input type="number" value="${qty}" oninput="calculateTotal()" class="bg-transparent text-sm text-center w-full outline-none qty text-slate-300"></td>
+                <td class="py-4 text-right"><input type="number" value="${price}" oninput="calculateTotal()" class="bg-transparent text-sm text-right w-full outline-none price text-slate-300"></td>
+            </tr>`;
+            document.getElementById('item-list').insertAdjacentHTML('beforeend', row);
+        }
+
+        async function generatePDF(shouldSave = false) {
+            const invNo = document.getElementById('doc-id').innerText;
+            const cust = document.getElementById('custName').value || 'Pelanggan';
+            const total = document.getElementById('grand-total').innerText;
+
+            if(shouldSave) {
+                await window.saveToFirestore({
+                    invoiceNo: invNo,
+                    customerName: cust,
+                    customerPhone: document.getElementById('custPhone').value,
+                    totalAmount: total,
+                    date: document.getElementById('doc-date').value
+                });
+            }
+
+            const element = document.getElementById('document-area');
+            const opt = {
+                margin: 10,
+                filename: `KETICK_${invNo}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, backgroundColor: '#020617' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        window.editInvoice = (id) => {
+            const inv = window.currentInvoices.find(i => i.id === id);
+            if(!inv) return;
+            
+            window.setActiveEdit(id);
+            document.getElementById('save-btn-text').innerText = "KEMASKINI & PDF";
+            document.getElementById('doc-id').innerText = inv.invoiceNo;
+            document.getElementById('custName').value = inv.customerName;
+            document.getElementById('custPhone').value = inv.customerPhone || '';
+            document.getElementById('doc-date').value = inv.date;
+            
+            const list = document.getElementById('item-list');
+            list.innerHTML = '';
+            if(inv.items && inv.items.length > 0) {
+                inv.items.forEach(item => addItem(item.desc, item.qty, item.price));
+            } else {
+                addItem();
+            }
+            
+            calculateTotal();
+            switchTab('creator');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.downloadAgain = (id) => {
+            const inv = window.currentInvoices.find(i => i.id === id);
+            if(!inv) return;
+            window.editInvoice(id);
+            setTimeout(() => { generatePDF(false); }, 500);
+        };
+
+        window.renderHistoryUI = (invoices) => {
+            document.getElementById('history-container').innerHTML = invoices.map(inv => `
+                <div class="glass p-5 rounded-3xl border border-white/5 flex flex-col gap-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-blue-400 text-lg">${inv.customerName}</h4>
+                            <p class="text-[10px] opacity-40 font-mono uppercase">${inv.invoiceNo} • ${inv.date}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xl font-black text-emerald-400">RM ${inv.totalAmount}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 border-t border-white/5 pt-4 mt-2">
+                        <button onclick="editInvoice('${inv.id}')" class="flex-1 bg-white/5 py-2 rounded-xl text-[10px] font-bold hover:bg-blue-600 transition uppercase">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </button>
+                        <button onclick="downloadAgain('${inv.id}')" class="flex-1 bg-white/5 py-2 rounded-xl text-[10px] font-bold hover:bg-emerald-600 transition uppercase">
+                            <i class="fas fa-download mr-1"></i> PDF
+                        </button>
+                        <button onclick="deleteInvoice('${inv.id}')" class="bg-red-900/20 text-red-500 px-4 py-2 rounded-xl text-[10px] font-bold hover:bg-red-600 hover:text-white transition">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        function prepareWhatsApp() {
+            const phone = document.getElementById('custPhone').value;
+            if(!phone) return alert("Sila masukkan No Telefon!");
+            const msg = `Salam *${document.getElementById('custName').value || 'Pelanggan'}*,\nInvois *#${document.getElementById('doc-id').innerText}* berjumlah *RM${document.getElementById('grand-total').innerText}* sedia untuk disemak. Terima kasih!`;
+            window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
         }
     </script>
 </body>
 </html>
-function sendToWhatsApp(customerPhone, invoiceNo, totalAmount) {
-    const bizName = document.getElementById('bizName').value; // Ambil dari Firestore
-    const message = `Salam Sejahtera,
-    
-Terima kasih kerana memilih *${bizName}*. 
-
-Berikut adalah butiran invois anda:
-📌 *No. Invois:* #${invoiceNo}
-💰 *Jumlah:* RM ${totalAmount}
-
-Sila klik pautan di bawah untuk melihat/muat turun fail PDF invois anda:
-[Link PDF Anda Di Sini]
-
-Terima Kasih!`;
-
-    const encodedMsg = encodeURIComponent(message);
-    window.open(`https://wa.me/${customerPhone}?text=${encodedMsg}`, '_blank');
-}
