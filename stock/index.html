@@ -58,9 +58,7 @@
     <div id="addModal" class="modal">
         <div class="glass w-full max-w-lg rounded-[3rem] p-8 relative border border-white/10 shadow-2xl">
             <button onclick="toggleModal(false)" class="absolute top-6 right-6 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
-            
             <h3 class="text-xl font-black uppercase tracking-tighter mb-6">Daftar Produk Baru</h3>
-            
             <form id="productForm" class="space-y-4">
                 <div class="flex flex-col items-center mb-4">
                     <div id="imagePreview" class="w-24 h-24 rounded-2xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center mb-2 overflow-hidden">
@@ -71,7 +69,6 @@
                         <input type="file" id="productImage" accept="image/*" class="hidden" onchange="previewFile()">
                     </label>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2">
                         <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Nama Produk</label>
@@ -99,7 +96,6 @@
                         <input type="text" id="itemSku" class="input-style" placeholder="P001">
                     </div>
                 </div>
-
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] mt-6 transition-all shadow-lg shadow-blue-600/20">
                     Simpan Ke Database
                 </button>
@@ -119,18 +115,16 @@
           messagingSenderId: "407192673747",
           appId: "1:407192673747:web:9196c8d72d77a642f02326"
         };
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         let base64Image = "";
 
-        // Modal Toggle
         function toggleModal(show) {
             document.getElementById('addModal').style.display = show ? 'flex' : 'none';
             if(!show) document.getElementById('productForm').reset();
         }
 
-        // Preview & Convert Image
         function previewFile() {
             const file = document.querySelector('input[type=file]').files[0];
             const reader = new FileReader();
@@ -141,7 +135,6 @@
             if (file) { reader.readAsDataURL(file); }
         }
 
-        // Submit Form
         document.getElementById('productForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = e.submitter;
@@ -163,55 +156,24 @@
                 toggleModal(false);
                 base64Image = "";
                 document.getElementById('imagePreview').innerHTML = `<i class="fas fa-image text-slate-600 text-2xl"></i>`;
-            } catch (err) {
-                alert("Ralat simpan data!");
-            } finally {
-                btn.innerText = "SIMPAN KE DATABASE";
-                btn.disabled = false;
-            }
+            } catch (err) { alert("Ralat simpan data!"); } 
+            finally { btn.innerText = "SIMPAN KE DATABASE"; btn.disabled = false; }
         });
 
-        // Real-time Listener
         db.collection("inventory").orderBy("createdAt", "desc").onSnapshot(snap => {
             const table = document.getElementById('inventoryTable');
             table.innerHTML = '';
             let lowCount = 0;
-
             snap.forEach(doc => {
                 const p = doc.data();
                 if(p.stock <= 5) lowCount++;
-
-                table.innerHTML += `
-                    <tr class="border-b border-white/5 hover:bg-white/5 transition group">
-                        <td class="p-4 flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-xl overflow-hidden bg-white/5">
-                                <img src="${p.image}" class="w-full h-full object-cover">
-                            </div>
-                            <div>
-                                <p class="font-black uppercase tracking-tight">${p.name}</p>
-                                <p class="text-[8px] text-slate-600 font-bold">SKU: ${p.sku || 'N/A'}</p>
-                            </div>
-                        </td>
-                        <td class="p-4"><span class="bg-slate-800 px-3 py-1 rounded-md text-[9px] font-bold">${p.category}</span></td>
-                        <td class="p-4 text-right font-black text-blue-400">RM ${p.price.toFixed(2)}</td>
-                        <td class="p-4 text-center">
-                            <span class="${p.stock <= 5 ? 'text-red-500' : 'text-emerald-500'} font-black text-sm">${p.stock}</span>
-                        </td>
-                        <td class="p-4 text-center">
-                            <button onclick="deleteItem('${doc.id}')" class="text-slate-600 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button>
-                        </td>
-                    </tr>
-                `;
+                table.innerHTML += `<tr class="border-b border-white/5 hover:bg-white/5 transition group"><td class="p-4 flex items-center gap-4"><div class="w-10 h-10 rounded-xl overflow-hidden bg-white/5"><img src="${p.image}" class="w-full h-full object-cover"></div><div><p class="font-black uppercase tracking-tight">${p.name}</p><p class="text-[8px] text-slate-600 font-bold">SKU: ${p.sku || 'N/A'}</p></div></td><td class="p-4"><span class="bg-slate-800 px-3 py-1 rounded-md text-[9px] font-bold">${p.category}</span></td><td class="p-4 text-right font-black text-blue-400">RM ${p.price.toFixed(2)}</td><td class="p-4 text-center"><span class="${p.stock <= 5 ? 'text-red-500' : 'text-emerald-500'} font-black text-sm">${p.stock}</span></td><td class="p-4 text-center"><button onclick="deleteItem('${doc.id}')" class="text-slate-600 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button></td></tr>`;
             });
             document.getElementById('totalSku').innerText = snap.size;
             document.getElementById('lowStock').innerText = lowCount;
         });
 
-        async function deleteItem(id) {
-            if(confirm("Padam item ini?")) {
-                await db.collection("inventory").doc(id).delete();
-            }
-        }
+        async function deleteItem(id) { if(confirm("Padam item ini?")) { await db.collection("inventory").doc(id).delete(); } }
     </script>
 </body>
 </html>
