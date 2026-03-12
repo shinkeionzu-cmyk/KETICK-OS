@@ -31,9 +31,9 @@
     </div>
 
     <div class="flex flex-wrap gap-3 mb-6">
-        <button onclick="fetchSales('today')" class="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-xl text-xs font-bold transition">Hari Ini</button>
-        <button onclick="fetchSales('yesterday')" class="glass hover:bg-white/10 px-5 py-2 rounded-xl text-xs font-bold transition">Semalam</button>
-        <button onclick="fetchSales('month')" class="glass hover:bg-white/10 px-5 py-2 rounded-xl text-xs font-bold transition">30 Hari</button>
+        <button id="btn-today" onclick="fetchSales('today')" class="bg-blue-600 px-5 py-2 rounded-xl text-xs font-bold transition">Hari Ini</button>
+        <button id="btn-yesterday" onclick="fetchSales('yesterday')" class="glass hover:bg-white/10 px-5 py-2 rounded-xl text-xs font-bold transition">Semalam</button>
+        <button id="btn-all" onclick="fetchSales('all')" class="glass hover:bg-white/10 px-5 py-2 rounded-xl text-xs font-bold transition">Semua</button>
     </div>
 
     <div class="overflow-x-auto rounded-3xl glass border border-slate-800">
@@ -42,8 +42,8 @@
                 <tr>
                     <th class="p-5">Masa/ID</th>
                     <th class="p-5">Butiran Item</th>
+                    <th class="p-5">Kaedah</th>
                     <th class="p-5 text-right">Jumlah (RM)</th>
-                    <th class="p-5 text-center">Status</th>
                 </tr>
             </thead>
             <tbody id="sales-table-body" class="text-sm divide-y divide-slate-800">
@@ -51,50 +51,81 @@
         </table>
     </div>
 
-    <script type="module">
-        import { db, collection, query, where, onSnapshot, orderBy } from "../firebase-config.js";
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCT2nlX1fjiGvXAuaBWein6e1BQOOCH8ew",
+            authDomain: "ketick-os.firebaseapp.com",
+            projectId: "ketick-os",
+            storageBucket: "ketick-os.firebasestorage.app",
+            messagingSenderId: "407192673747",
+            appId: "1:407192673747:web:9196c8d72d77a642f02326"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         window.fetchSales = (period) => {
             const tbody = document.getElementById('sales-table-body');
-            let q;
+            let q = db.collection("sales");
             
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
 
+            // Filter hiasan butang
+            document.querySelectorAll('button[id^="btn-"]').forEach(b => {
+                b.classList.remove('bg-blue-600');
+                b.classList.add('glass');
+            });
+            document.getElementById('btn-' + period).classList.add('bg-blue-600');
+            document.getElementById('btn-' + period).classList.remove('glass');
+
             if (period === 'today') {
-                q = query(collection(db, "sales"), where("date", "==", todayStr), orderBy("timestamp", "desc"));
+                q = q.where("date", "==", todayStr);
             } else if (period === 'yesterday') {
                 const yesterday = new Date(now);
                 yesterday.setDate(now.getDate() - 1);
                 const yesterdayStr = yesterday.toISOString().split('T')[0];
-                q = query(collection(db, "sales"), where("date", "==", yesterdayStr), orderBy("timestamp", "desc"));
-            } else {
-                q = query(collection(db, "sales"), orderBy("timestamp", "desc"));
+                q = q.where("date", "==", yesterdayStr);
             }
 
-            onSnapshot(q, (snapshot) => {
+            // Susun mengikut masa terbaru
+            q.orderBy("timestamp", "desc").onSnapshot((snapshot) => {
                 let totalRM = 0;
                 let count = 0;
                 
+                if(snapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-slate-600 font-bold uppercase tracking-widest text-xs">Tiada Rekod Jualan</td></tr>`;
+                    document.getElementById('filter-total').innerText = "RM 0.00";
+                    document.getElementById('filter-count').innerText = "0";
+                    return;
+                }
+
                 tbody.innerHTML = snapshot.docs.map(doc => {
                     const data = doc.data();
-                    totalRM += parseFloat(data.totalPrice || 0);
+                    const val = parseFloat(data.totalPrice || 0);
+                    totalRM += val;
                     count++;
                     
                     return `
                         <tr class="hover:bg-white/5 transition-colors">
                             <td class="p-5">
-                                <div class="font-bold text-slate-200">${data.time || 'N/A'}</div>
-                                <div class="text-[10px] text-slate-500">ID: ...${doc.id.slice(-5)}</div>
+                                <div class="font-bold text-slate-200">${data.time || '00:00'}</div>
+                                <div class="text-[10px] text-slate-500 italic">...${doc.id.slice(-5)}</div>
                             </td>
                             <td class="p-5 text-slate-400">
-                                ${data.items ? data.items.map(i => i.name).join(', ') : 'Servis/Produk'}
+                                <div class="truncate max-w-[200px]">
+                                    ${data.items ? data.items.map(i => i.name).join(', ') : 'Produk'}
+                                </div>
                             </td>
-                            <td class="p-5 text-right font-bold text-emerald-400">
-                                ${parseFloat(data.totalPrice).toFixed(2)}
+                            <td class="p-5">
+                                <span class="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border border-blue-500/20">
+                                    ${data.method || 'Tunai'}
+                                </span>
                             </td>
-                            <td class="p-5 text-center">
-                                <span class="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-bold">PAID</span>
+                            <td class="p-5 text-right font-black text-emerald-400">
+                                ${val.toFixed(2)}
                             </td>
                         </tr>
                     `;
@@ -105,7 +136,7 @@
             });
         };
 
-        // Load jualan hari ini secara default
+        // Mulakan dengan data hari ini
         fetchSales('today');
     </script>
 </body>
