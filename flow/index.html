@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Flow | KETICK OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: transparent; color: white; min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .flow-line { border-left: 2px dashed rgba(59, 130, 246, 0.3); margin-left: 20px; padding-left: 30px; position: relative; }
+        .flow-line::before { content: ''; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; background: #3b82f6; border-radius: 50%; box-shadow: 0 0 15px #3b82f6; }
+    </style>
+</head>
+<body class="p-6 md:p-10">
+
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-12">
+            <h2 class="text-3xl font-black tracking-tighter uppercase">System <span class="text-blue-500">Architecture</span></h2>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Struktur Projek & Aliran Data Cloud Firestore</p>
+        </div>
+
+        <div class="space-y-12">
+            
+            <section>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-10 h-10 glass rounded-xl flex items-center justify-center text-blue-500 shadow-lg"><i class="fas fa-folder-tree"></i></div>
+                    <h3 class="text-lg font-black uppercase tracking-tight">Folder Structure (GitHub)</h3>
+                </div>
+                
+                <div class="glass rounded-[2rem] p-6 font-mono text-xs text-slate-400 space-y-2 border border-white/5">
+                    <p class="text-white"><i class="fas fa-folder-open text-amber-500 mr-2"></i> root/</p>
+                    <div class="ml-6 space-y-2">
+                        <p><i class="fab fa-html5 text-orange-500 mr-2"></i> index.html <span class="text-slate-600">// Main Admin Panel</span></p>
+                        <p><i class="fas fa-file-code text-blue-400 mr-2"></i> manifest.json <span class="text-slate-600">// PWA Config</span></p>
+                        <p><i class="fas fa-folder text-blue-500 mr-2"></i> pos/ <span class="text-slate-600">// Terminal Jualan</span></p>
+                        <p><i class="fas fa-folder text-blue-500 mr-2"></i> stock/ <span class="text-slate-600">// Management Produk</span></p>
+                        <p><i class="fas fa-folder text-blue-500 mr-2"></i> backup/ <span class="text-slate-600">// Data Exporter</span></p>
+                        <p><i class="fas fa-folder text-blue-500 mr-2"></i> flow/ <span class="text-slate-600">// System Documentation</span></p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-10 h-10 glass rounded-xl flex items-center justify-center text-emerald-500 shadow-lg"><i class="fas fa-database"></i></div>
+                    <h3 class="text-lg font-black uppercase tracking-tight">Firebase Logic Flow</h3>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="flow-line pb-6">
+                        <h4 class="text-sm font-black text-blue-400 uppercase tracking-tighter">1. Modul Inventory</h4>
+                        <p class="text-[11px] text-slate-400 mt-1">Developer input data produk baru di <code class="text-white">stock/index.html</code> -> Hantar ke koleksi <code class="text-white">inventory</code> di Firestore.</p>
+                    </div>
+
+                    <div class="flow-line pb-6">
+                        <h4 class="text-sm font-black text-emerald-400 uppercase tracking-tighter">2. Modul POS</h4>
+                        <p class="text-[11px] text-slate-400 mt-1">POS tarik data dari koleksi <code class="text-white">inventory</code> -> Transaksi berlaku -> Simpan rekod ke koleksi <code class="text-white">sales</code> -> Tolak kuantiti dalam <code class="text-white">inventory</code>.</p>
+                    </div>
+
+                    <div class="flow-line pb-6">
+                        <h4 class="text-sm font-black text-purple-400 uppercase tracking-tighter">3. Dashboard Sync</h4>
+                        <p class="text-[11px] text-slate-400 mt-1"><code class="text-white">index.html</code> (Main) menggunakan <code class="text-white">onSnapshot</code> untuk dengar perubahan real-time dalam koleksi <code class="text-white">sales</code> & <code class="text-white">inventory</code>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-2 gap-4">
+                <div class="glass p-5 rounded-3xl border border-white/5">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">Frontend</p>
+                    <p class="text-xs font-black">Tailwind CSS + FontAwesome</p>
+                </div>
+                <div class="glass p-5 rounded-3xl border border-white/5">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">Backend</p>
+                    <p class="text-xs font-black">Firebase Firestore SDK</p>
+                </div>
+            </section>
+
+        </div>
+
+        <div class="mt-12 pt-6 border-t border-white/5 text-center">
+            <p class="text-[9px] font-bold text-slate-600 uppercase tracking-[0.3em]">Ketick OS v2.0 • Mobile Developer Edition</p>
+        </div>
+    </div>
+
+</body>
+</html>
