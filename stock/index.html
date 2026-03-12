@@ -3,24 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Master | KETICK OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: transparent; color: white; min-height: 100vh; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; min-height: 100vh; }
         .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; }
+        .modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(10px); align-items: center; justify-content: center; padding: 20px; }
+        .modal.active { display: flex; }
         .input-style { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; font-size: 13px; color: white; width: 100%; outline: none; transition: 0.3s; }
         .input-style:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="p-4 md:p-8 no-scrollbar">
+<body class="p-4 md:p-8 no-scrollbar pb-20">
 
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
             <h2 class="text-2xl font-black tracking-tighter uppercase">Inventory <span class="text-blue-500">Master</span></h2>
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Sistem Pengurusan Stok Real-time</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1 text-blue-400/60">Sistem Pengurusan Stok Real-time</p>
         </div>
         <button onclick="openAddModal()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-blue-600/20 transition-all">
             <i class="fas fa-plus mr-2"></i> Tambah Item
@@ -28,7 +30,7 @@
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-center">
-        <div class="glass p-6 rounded-[2.5rem]">
+        <div class="glass p-6 rounded-[2.5rem] border border-white/5">
             <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total SKU</p>
             <h3 id="totalSku" class="text-2xl font-black tracking-tighter">0</h3>
         </div>
@@ -57,44 +59,48 @@
 
     <div id="productModal" class="modal">
         <div class="glass w-full max-w-lg rounded-[3rem] p-8 relative border border-white/10 shadow-2xl">
-            <button onclick="toggleModal(false)" class="absolute top-6 right-6 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
-            <h3 id="modalTitle" class="text-xl font-black uppercase tracking-tighter mb-6">Daftar Produk Baru</h3>
+            <button onclick="toggleModal(false)" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors"><i class="fas fa-times"></i></button>
+            <h3 id="modalTitle" class="text-xl font-black uppercase tracking-tighter mb-6 text-blue-500">Daftar Produk Baru</h3>
+            
             <form id="productForm" class="space-y-4">
                 <input type="hidden" id="editId">
+                
                 <div class="flex flex-col items-center mb-4">
                     <div id="imagePreview" class="w-24 h-24 rounded-2xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center mb-2 overflow-hidden">
                         <i class="fas fa-image text-slate-600 text-2xl"></i>
                     </div>
-                    <label class="cursor-pointer bg-blue-600/10 text-blue-500 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-blue-500/20">
+                    <label class="cursor-pointer bg-blue-600/10 text-blue-500 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-blue-500/20 hover:bg-blue-600/20 transition">
                         Pilih Gambar
                         <input type="file" id="productImage" accept="image/*" class="hidden" onchange="previewFile()">
                     </label>
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2">
                         <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Nama Produk</label>
-                        <input type="text" id="itemName" class="input-style" placeholder="Contoh: Kasut Digital X1" required>
+                        <input type="text" id="itemName" class="input-style" placeholder="Contoh: Pen Digital Pro" required>
                     </div>
                     <div>
                         <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Kategori</label>
                         <div class="flex gap-2">
                             <select id="itemCategory" class="input-style flex-1"></select>
-                            <button type="button" onclick="addNewCategory()" class="bg-slate-800 px-3 rounded-xl hover:bg-slate-700"><i class="fas fa-plus text-[10px]"></i></button>
+                            <button type="button" onclick="addNewCategory()" class="bg-slate-800 px-3 rounded-xl hover:bg-slate-700 transition"><i class="fas fa-plus text-[10px]"></i></button>
                         </div>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Kod (SKU)</label>
+                        <input type="text" id="itemSku" class="input-style" placeholder="SKU-001">
                     </div>
                     <div>
                         <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Harga Jualan (RM)</label>
                         <input type="number" step="0.01" id="itemPrice" class="input-style" placeholder="0.00" required>
                     </div>
                     <div>
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Stok Baki</label>
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Stok Semasa</label>
                         <input type="number" id="itemStock" class="input-style" placeholder="0" required>
                     </div>
-                    <div>
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Kod Produk (SKU)</label>
-                        <input type="text" id="itemSku" class="input-style" placeholder="P001">
-                    </div>
                 </div>
+
                 <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] mt-6 transition-all shadow-lg shadow-blue-600/20">
                     Simpan Ke Database
                 </button>
@@ -114,18 +120,19 @@
           messagingSenderId: "407192673747",
           appId: "1:407192673747:web:9196c8d72d77a642f02326"
         };
+
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         let base64Image = "";
-        let categories = ["LAIN-LAIN"];
+        let categories = ["LAIN-LAIN", "GAJET", "SERVIS", "PERABOT"];
 
-        // Muat turun kategori unik dari database
+        // Load Categories from Database
         async function loadCategories() {
             const snap = await db.collection("inventory").get();
-            const set = new Set(["LAIN-LAIN"]);
-            snap.forEach(doc => { if(doc.data().category) set.add(doc.data().category) });
-            categories = Array.from(set);
+            const set = new Set(["LAIN-LAIN", "GAJET", "SERVIS", "PERABOT"]);
+            snap.forEach(doc => { if(doc.data().category) set.add(doc.data().category.toUpperCase()) });
+            categories = Array.from(set).sort();
             renderCategoryDropdown();
         }
 
@@ -135,7 +142,7 @@
         }
 
         function addNewCategory() {
-            const name = prompt("Masukkan Nama Kategori Baru:");
+            const name = prompt("Nama Kategori Baru:");
             if(name && !categories.includes(name.toUpperCase())) {
                 categories.push(name.toUpperCase());
                 renderCategoryDropdown();
@@ -144,7 +151,9 @@
         }
 
         function toggleModal(show) {
-            document.getElementById('productModal').style.display = show ? 'flex' : 'none';
+            const modal = document.getElementById('productModal');
+            if(show) modal.classList.add('active');
+            else modal.classList.remove('active');
         }
 
         function openAddModal() {
@@ -156,28 +165,30 @@
             toggleModal(true);
         }
 
+        // Image Preview & Compression
         function previewFile() {
             const file = document.querySelector('input[type=file]').files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.readAsDataURL(file);
             reader.onload = function (e) {
                 const img = new Image();
                 img.src = e.target.result;
                 img.onload = function () {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 400;
+                    const MAX_WIDTH = 300;
                     const scaleSize = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH;
                     canvas.height = img.height * scaleSize;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    base64Image = canvas.toDataURL('image/jpeg', 0.7);
+                    base64Image = canvas.toDataURL('image/jpeg', 0.6);
                     document.getElementById('imagePreview').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
                 };
             };
+            reader.readAsDataURL(file);
         }
 
+        // CRUD: Create & Update
         document.getElementById('productForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
@@ -190,8 +201,8 @@
                 category: document.getElementById('itemCategory').value,
                 price: parseFloat(document.getElementById('itemPrice').value),
                 stock: parseInt(document.getElementById('itemStock').value),
-                sku: document.getElementById('itemSku').value,
-                image: base64Image || 'https://via.placeholder.com/150',
+                sku: document.getElementById('itemSku').value || 'N/A',
+                image: base64Image || 'https://via.placeholder.com/150?text=No+Image',
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
@@ -203,56 +214,76 @@
                     await db.collection("inventory").add(data);
                 }
                 toggleModal(false);
-            } catch (err) { alert("Ralat: " + err.message); } 
-            finally { btn.innerText = "Simpan Ke Database"; btn.disabled = false; }
+            } catch (err) { 
+                alert("Ralat Simpan: " + err.message); 
+            } finally { 
+                btn.innerText = "Simpan Ke Database"; 
+                btn.disabled = false; 
+            }
         });
 
-        // Listen data real-time
+        // Real-time Listener for Inventory Table
         db.collection("inventory").orderBy("name", "asc").onSnapshot(snap => {
             const table = document.getElementById('inventoryTable');
             table.innerHTML = '';
             let lowCount = 0;
+
+            if(snap.empty) {
+                table.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-500 uppercase font-bold">Tiada Item Dijumpai</td></tr>`;
+            }
+
             snap.forEach(doc => {
                 const p = doc.data();
                 if(p.stock <= 5) lowCount++;
+                
                 table.innerHTML += `
-                <tr class="border-b border-white/5 hover:bg-white/5 transition group">
+                <tr class="border-b border-white/5 hover:bg-white/5 transition-all group">
                     <td class="p-4 flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden bg-white/5"><img src="${p.image}" class="w-full h-full object-cover"></div>
-                        <div><p class="font-black uppercase tracking-tight">${p.name}</p><p class="text-[8px] text-slate-600 font-bold">SKU: ${p.sku || '-'}</p></div>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden bg-white/5 border border-white/10">
+                            <img src="${p.image}" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <p class="font-black uppercase tracking-tight text-slate-200">${p.name}</p>
+                            <p class="text-[8px] text-slate-600 font-bold uppercase tracking-widest">SKU: ${p.sku}</p>
+                        </div>
                     </td>
-                    <td class="p-4"><span class="bg-slate-800 px-3 py-1 rounded-md text-[9px] font-bold">${p.category}</span></td>
-                    <td class="p-4 text-right font-black text-blue-400">RM ${p.price.toFixed(2)}</td>
-                    <td class="p-4 text-center"><span class="${p.stock <= 5 ? 'text-red-500' : 'text-emerald-500'} font-black text-sm">${p.stock}</span></td>
+                    <td class="p-4"><span class="bg-blue-500/10 text-blue-500 px-3 py-1 rounded-lg text-[9px] font-black uppercase">${p.category}</span></td>
+                    <td class="p-4 text-right font-black text-slate-300">RM ${p.price.toFixed(2)}</td>
                     <td class="p-4 text-center">
-                        <div class="flex gap-3 justify-center">
-                            <button onclick="editItem('${doc.id}')" class="text-blue-500 hover:text-blue-400"><i class="fas fa-edit"></i></button>
-                            <button onclick="deleteItem('${doc.id}')" class="text-slate-600 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
+                        <span class="${p.stock <= 5 ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'} px-4 py-2 rounded-xl font-black text-xs">
+                            ${p.stock}
+                        </span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="flex gap-4 justify-center">
+                            <button onclick="editItem('${doc.id}')" class="text-blue-500/50 hover:text-blue-500 transition-colors"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteItem('${doc.id}')" class="text-slate-700 hover:text-red-500 transition-colors"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </td>
                 </tr>`;
             });
+
             document.getElementById('totalSku').innerText = snap.size;
             document.getElementById('lowStock').innerText = lowCount;
         });
 
+        // Functions for Edit & Delete
         async function editItem(id) {
-            const doc = await db.collection("inventory").doc(id).get();
-            const p = doc.data();
+            const docRef = await db.collection("inventory").doc(id).get();
+            const p = docRef.data();
             
-            document.getElementById('modalTitle').innerText = "Edit Produk";
+            document.getElementById('modalTitle').innerText = "Kemaskini Produk";
             document.getElementById('editId').value = id;
             document.getElementById('itemName').value = p.name;
             document.getElementById('itemPrice').value = p.price;
             document.getElementById('itemStock').value = p.stock;
-            document.getElementById('itemSku').value = p.sku;
+            document.getElementById('itemSku').value = p.sku === 'N/A' ? '' : p.sku;
             
-            // Check if category exists, if not add it
-            if(!categories.includes(p.category)) {
-                categories.push(p.category);
+            if(!categories.includes(p.category.toUpperCase())) {
+                categories.push(p.category.toUpperCase());
                 renderCategoryDropdown();
             }
-            document.getElementById('itemCategory').value = p.category;
+            document.getElementById('itemCategory').value = p.category.toUpperCase();
             
             base64Image = p.image;
             document.getElementById('imagePreview').innerHTML = `<img src="${p.image}" class="w-full h-full object-cover">`;
@@ -260,8 +291,13 @@
             toggleModal(true);
         }
 
-        async function deleteItem(id) { if(confirm("Padam item ini secara kekal?")) { await db.collection("inventory").doc(id).delete(); } }
-        
+        async function deleteItem(id) {
+            if(confirm("Padam item ini secara kekal dari gudang?")) {
+                await db.collection("inventory").doc(id).delete();
+            }
+        }
+
+        // Initialize Kategori
         loadCategories();
     </script>
 </body>
