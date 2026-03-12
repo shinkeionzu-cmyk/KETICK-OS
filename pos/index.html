@@ -15,12 +15,12 @@
         .product-card:active { transform: scale(0.95); }
         .payment-btn.active { border-color: #10b981; background: rgba(16, 185, 129, 0.1); color: #10b981; }
         .cat-btn.active { background: #10b981; color: white; border-color: #10b981; }
-        
-        /* PEMBETULAN: Pastikan modal sentiasa di atas navigasi utama */
         #cart-overlay, #payment-modal { z-index: 9999 !important; }
     </style>
 </head>
-<body class="p-4 no-scrollbar pb-32"> <div class="flex justify-between items-center mb-6">
+<body class="p-4 no-scrollbar pb-32">
+
+    <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-xl font-black tracking-tighter uppercase text-white">Mini <span class="text-emerald-500">POS</span></h1>
             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Kaunter Jualan Pantas</p>
@@ -49,14 +49,11 @@
             <h2 class="text-2xl font-black tracking-tighter text-white">BAKUL <span class="text-emerald-500">JUALAN</span></h2>
             <button onclick="toggleCart()" class="w-10 h-10 glass rounded-full flex items-center justify-center"><i class="fas fa-times text-slate-400"></i></button>
         </div>
-        
         <div id="cart-items" class="flex-grow overflow-y-auto space-y-3 no-scrollbar"></div>
-        
         <div class="mt-4 flex gap-2">
             <input type="text" id="coupon-code" placeholder="Kod Kupon" class="flex-grow bg-white/5 border border-white/10 rounded-xl px-4 text-xs focus:outline-none text-white">
             <button onclick="applyCoupon()" class="bg-blue-600 px-4 py-3 rounded-xl text-[10px] font-black uppercase">Guna</button>
         </div>
-
         <div class="mt-4 p-5 glass rounded-3xl space-y-2">
             <div class="flex justify-between text-[10px] font-bold text-slate-500 uppercase"><span>Subtotal</span> <span id="view-subtotal">RM 0.00</span></div>
             <div class="flex justify-between text-[10px] font-bold text-red-400 uppercase"><span>Diskaun</span> <span id="view-discount">- RM 0.00</span></div>
@@ -65,22 +62,19 @@
                 <span id="total-price" class="text-xl font-black text-emerald-400 tracking-tighter">RM 0.00</span>
             </div>
         </div>
-        <button onclick="showPaymentModal()" class="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl mt-4 mb-4 shadow-lg shadow-emerald-600/20 uppercase text-xs tracking-[0.2em]">Sahkan Bayaran</button>
+        <button onclick="showPaymentModal()" class="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl mt-4 mb-4 uppercase text-xs tracking-[0.2em]">Sahkan Bayaran</button>
     </div>
 
     <div id="payment-modal" class="fixed inset-0 bg-[#020617]/95 hidden p-6 flex flex-col backdrop-blur-xl">
         <div class="text-center mb-8 mt-4">
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2">Checkout Terminal</p>
             <h2 id="pay-grand-total" class="text-5xl font-black text-white tracking-tighter">RM 0.00</h2>
         </div>
-
         <div class="grid grid-cols-2 gap-3 mb-8">
             <button onclick="setMethod('Tunai')" class="payment-btn active p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5 text-white"><i class="fas fa-money-bill-wave text-xl text-emerald-500"></i> Tunai</button>
             <button onclick="setMethod('Transfer')" class="payment-btn p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5 text-white"><i class="fas fa-university text-xl text-blue-500"></i> Transfer</button>
             <button onclick="setMethod('QR')" class="payment-btn p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5 text-white"><i class="fas fa-qrcode text-xl text-purple-500"></i> QR Code</button>
             <button onclick="setMethod('Card')" class="payment-btn p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5 text-white"><i class="fas fa-credit-card text-xl text-orange-500"></i> Kad</button>
         </div>
-
         <div class="space-y-4 flex-grow">
             <div class="p-4 glass rounded-2xl border-white/10">
                 <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Jumlah Diterima (RM)</label>
@@ -91,10 +85,9 @@
                 <h3 id="change-amount" class="text-2xl font-black text-white">0.00</h3>
             </div>
         </div>
-
         <div class="flex gap-3 mt-6 mb-8">
             <button onclick="closePaymentModal()" class="flex-1 bg-white/5 py-4 rounded-2xl font-black text-xs uppercase text-white">Batal</button>
-            <button onclick="finalCheckout()" class="flex-[2] bg-blue-600 py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-blue-600/30 text-white">Selesai & Simpan</button>
+            <button onclick="finalCheckout()" class="flex-[2] bg-blue-600 py-4 rounded-2xl font-black text-xs uppercase text-white">Selesai & Simpan</button>
         </div>
     </div>
 
@@ -152,14 +145,14 @@
             });
 
             grid.innerHTML = filtered.map(p => `
-                <div onclick="addToCart('${p.name}', ${p.price})" class="product-card p-4 glass rounded-[2.5rem] border border-white/5">
+                <div onclick="addToCart('${p.id}', '${p.name}', ${p.price})" class="product-card p-4 glass rounded-[2.5rem] border border-white/5">
                     <div class="w-full aspect-square bg-white/5 rounded-3xl mb-3 overflow-hidden">
                         <img src="${p.image}" class="w-full h-full object-cover">
                     </div>
                     <h3 class="font-bold text-[11px] truncate uppercase tracking-tighter">${p.name}</h3>
                     <div class="flex justify-between items-center mt-1">
                         <p class="text-emerald-400 font-black text-xs">RM ${p.price.toFixed(2)}</p>
-                        <p class="text-[8px] font-bold text-slate-500">Stok: ${p.stock}</p>
+                        <p class="text-[8px] font-bold ${p.stock <= 5 ? 'text-red-500' : 'text-slate-500'}">Stok: ${p.stock}</p>
                     </div>
                 </div>
             `).join('');
@@ -169,24 +162,20 @@
             currentCategory = cat;
             renderProducts();
             document.querySelectorAll('.cat-btn').forEach(btn => {
-                const btnText = btn.innerText === 'SEMUA' ? 'ALL' : btn.innerText;
-                btn.classList.toggle('active', btnText === cat);
+                btn.classList.toggle('active', btn.innerText.toUpperCase() === cat || (cat === 'ALL' && btn.innerText === 'SEMUA'));
             });
         }
 
         function filterProducts() { renderProducts(); }
-
         function setParentNav(s) { if(window.parent) window.parent.postMessage(s === 'hide' ? 'hideNav' : 'showNav', '*'); }
-        
         function toggleCart() {
             const el = document.getElementById('cart-overlay');
             el.classList.toggle('translate-y-full');
-            // Hantar arahan ke parent untuk sorok navigasi bila bakul dibuka
             setParentNav(el.classList.contains('translate-y-full') ? 'show' : 'hide');
         }
 
-        function addToCart(name, price) {
-            cart.push({ name, price });
+        function addToCart(id, name, price) {
+            cart.push({ id, name, price });
             updateUI();
         }
 
@@ -211,13 +200,7 @@
 
         function showPaymentModal() { if(cart.length > 0) document.getElementById('payment-modal').classList.remove('hidden'); }
         function closePaymentModal() { document.getElementById('payment-modal').classList.add('hidden'); }
-        
-        function setMethod(m) { 
-            paymentMethod = m; 
-            document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active')); 
-            event.currentTarget.classList.add('active'); 
-        }
-
+        function setMethod(m) { paymentMethod = m; document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active'); }
         function calcChange() {
             let total = cart.reduce((acc, item) => acc + item.price, 0) - discount;
             let paid = parseFloat(document.getElementById('amount-paid').value) || 0;
@@ -229,8 +212,11 @@
             let total = subtotal - discount;
             let paid = parseFloat(document.getElementById('amount-paid').value) || 0;
             const now = new Date();
+
             if(paid < total && paymentMethod === 'Tunai') return alert("Bayaran tidak cukup!");
+
             try {
+                // 1. Simpan rekod jualan
                 await db.collection("sales").add({
                     items: cart,
                     subtotal: subtotal,
@@ -243,7 +229,18 @@
                     date: now.toISOString().split('T')[0],
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Transaksi Berjaya!");
+
+                // 2. TOLAK STOK AUTOMATIK (Link ke Inventory)
+                const batch = db.batch();
+                cart.forEach(item => {
+                    const ref = db.collection("inventory").doc(item.id);
+                    batch.update(ref, {
+                        stock: firebase.firestore.FieldValue.increment(-1)
+                    });
+                });
+                await batch.commit();
+
+                alert("Transaksi Berjaya & Stok Dikemaskini!");
                 cart = []; discount = 0; document.getElementById('amount-paid').value = '';
                 updateUI(); closePaymentModal(); toggleCart();
             } catch(e) { alert("Error: " + e.message); }
