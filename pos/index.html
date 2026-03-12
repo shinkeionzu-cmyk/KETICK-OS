@@ -49,13 +49,13 @@
 
     <div id="cart-overlay" class="fixed inset-0 bg-[#020617] z-[200] translate-y-full transition-transform duration-500 p-6 flex flex-col">
         <div class="flex justify-between items-center mb-8">
-            <h2 class="text-2xl font-black tracking-tighter">BAKUL <span class="text-emerald-500">JUALAN</span></h2>
+            <h2 class="text-2xl font-black tracking-tighter text-white">BAKUL <span class="text-emerald-500">JUALAN</span></h2>
             <button onclick="toggleCart()" class="w-10 h-10 glass rounded-full flex items-center justify-center"><i class="fas fa-times text-slate-400"></i></button>
         </div>
         <div id="cart-items" class="flex-grow overflow-y-auto space-y-3 no-scrollbar"></div>
         
         <div class="mt-4 flex gap-2">
-            <input type="text" id="coupon-code" placeholder="Kod Kupon" class="flex-grow bg-white/5 border border-white/10 rounded-xl px-4 text-xs focus:outline-none">
+            <input type="text" id="coupon-code" placeholder="Kod Kupon" class="flex-grow bg-white/5 border border-white/10 rounded-xl px-4 text-xs focus:outline-none text-white">
             <button onclick="applyCoupon()" class="bg-blue-600 px-4 py-3 rounded-xl text-[10px] font-black uppercase">Guna</button>
         </div>
 
@@ -63,7 +63,7 @@
             <div class="flex justify-between text-[10px] font-bold text-slate-500 uppercase"><span>Subtotal</span> <span id="view-subtotal">RM 0.00</span></div>
             <div class="flex justify-between text-[10px] font-bold text-red-400 uppercase"><span>Diskaun</span> <span id="view-discount">- RM 0.00</span></div>
             <div class="flex justify-between items-center pt-2 border-t border-white/5">
-                <span class="text-xs font-black uppercase tracking-widest">Total</span>
+                <span class="text-xs font-black uppercase tracking-widest text-white">Total</span>
                 <span id="total-price" class="text-xl font-black text-emerald-400 tracking-tighter">RM 0.00</span>
             </div>
         </div>
@@ -77,10 +77,10 @@
         </div>
 
         <div class="grid grid-cols-2 gap-3 mb-8">
-            <button onclick="setMethod('Tunai')" class="payment-btn active p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5"><i class="fas fa-money-bill-wave text-xl"></i> Tunai</button>
-            <button onclick="setMethod('Transfer')" class="payment-btn p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5"><i class="fas fa-university text-xl"></i> Transfer</button>
-            <button onclick="setMethod('QR')" class="payment-btn p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5"><i class="fas fa-qrcode text-xl"></i> QR Code</button>
-            <button onclick="setMethod('Card')" class="payment-btn p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5"><i class="fas fa-credit-card text-xl"></i> Kad</button>
+            <button onclick="setMethod('Tunai')" class="payment-btn active p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5 text-white"><i class="fas fa-money-bill-wave text-xl text-emerald-500"></i> Tunai</button>
+            <button onclick="setMethod('Transfer')" class="payment-btn p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5 text-white"><i class="fas fa-university text-xl text-blue-500"></i> Transfer</button>
+            <button onclick="setMethod('QR')" class="payment-btn p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5 text-white"><i class="fas fa-qrcode text-xl text-purple-500"></i> QR Code</button>
+            <button onclick="setMethod('Card')" class="payment-btn p-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2 border border-white/5 text-white"><i class="fas fa-credit-card text-xl text-orange-500"></i> Kad</button>
         </div>
 
         <div class="space-y-4 flex-grow">
@@ -95,8 +95,8 @@
         </div>
 
         <div class="flex gap-3 mt-6">
-            <button onclick="closePaymentModal()" class="flex-1 bg-white/5 py-4 rounded-2xl font-black text-xs uppercase">Batal</button>
-            <button onclick="finalCheckout()" class="flex-[2] bg-blue-600 py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-blue-600/30">Selesai & Simpan</button>
+            <button onclick="closePaymentModal()" class="flex-1 bg-white/5 py-4 rounded-2xl font-black text-xs uppercase text-white">Batal</button>
+            <button onclick="finalCheckout()" class="flex-[2] bg-blue-600 py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-blue-600/30 text-white">Selesai & Simpan</button>
         </div>
     </div>
 
@@ -104,7 +104,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Config Firebase - Samakan dengan Dashboard awak
         const firebaseConfig = {
             apiKey: "AIzaSyCT2nlX1fjiGvXAuaBWein6e1BQOOCH8ew",
             authDomain: "ketick-os.firebaseapp.com",
@@ -120,7 +119,7 @@
         let discount = 0;
         let paymentMethod = 'Tunai';
 
-        function setParentNav(s) { window.parent.postMessage(s === 'hide' ? 'hideNav' : 'showNav', '*'); }
+        function setParentNav(s) { if(window.parent) window.parent.postMessage(s === 'hide' ? 'hideNav' : 'showNav', '*'); }
         
         function toggleCart() {
             const el = document.getElementById('cart-overlay');
@@ -138,9 +137,11 @@
             let subtotal = cart.reduce((acc, item) => acc + item.price, 0);
             let total = subtotal - discount;
 
-            container.innerHTML = cart.map((item, i) => `
+            container.innerHTML = cart.length === 0 ? 
+                `<div class='text-center py-10 text-slate-600 text-xs uppercase font-bold'>Bakul Kosong</div>` :
+                cart.map((item, i) => `
                 <div class="flex justify-between items-center p-4 glass rounded-2xl border-white/5">
-                    <div><p class="font-bold text-sm">${item.name}</p><p class="text-[10px] text-emerald-500 font-black">RM ${item.price.toFixed(2)}</p></div>
+                    <div><p class="font-bold text-sm text-white">${item.name}</p><p class="text-[10px] text-emerald-500 font-black">RM ${item.price.toFixed(2)}</p></div>
                     <button onclick="cart.splice(${i},1);updateUI()" class="text-red-500/30"><i class="fas fa-trash"></i></button>
                 </div>
             `).join('');
@@ -154,29 +155,14 @@
 
         function applyCoupon() {
             const code = document.getElementById('coupon-code').value;
-            if(code === 'RAYA2026') {
-                discount = 5.00; alert("Kupon RM5.00 Diterima!");
-            } else {
-                discount = 0; alert("Kupon Tidak Sah");
-            }
+            if(code === 'RAYA2026') { discount = 5.00; alert("Kupon RM5.00 Diterima!"); } 
+            else { discount = 0; alert("Kupon Tidak Sah"); }
             updateUI();
         }
 
-        function showPaymentModal() {
-            if(cart.length === 0) return;
-            document.getElementById('payment-modal').classList.remove('hidden');
-        }
-
-        function closePaymentModal() {
-            document.getElementById('payment-modal').classList.add('hidden');
-        }
-
-        function setMethod(m) {
-            paymentMethod = m;
-            document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-        }
-
+        function showPaymentModal() { if(cart.length > 0) document.getElementById('payment-modal').classList.remove('hidden'); }
+        function closePaymentModal() { document.getElementById('payment-modal').classList.add('hidden'); }
+        function setMethod(m) { paymentMethod = m; document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active'); }
         function calcChange() {
             let total = cart.reduce((acc, item) => acc + item.price, 0) - discount;
             let paid = parseFloat(document.getElementById('amount-paid').value) || 0;
@@ -187,27 +173,28 @@
             let subtotal = cart.reduce((acc, item) => acc + item.price, 0);
             let total = subtotal - discount;
             let paid = parseFloat(document.getElementById('amount-paid').value) || 0;
+            const now = new Date();
 
             if(paid < total && paymentMethod === 'Tunai') return alert("Bayaran tidak cukup!");
 
             try {
+                // SELARASKAN NAMA KUNCI DATA DI SINI
                 await db.collection("sales").add({
                     items: cart,
                     subtotal: subtotal,
                     discount: discount,
-                    totalValue: total,
+                    totalPrice: total, // Guna totalPrice supaya sama dengan skrin Sales
                     amountPaid: paid,
                     change: paid - total,
                     method: paymentMethod,
-                    date: new Date().toISOString().split('T')[0],
+                    time: now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }),
+                    date: now.toISOString().split('T')[0],
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                alert("Transaksi Berjaya disimpan!");
-                cart = []; discount = 0;
-                updateUI();
-                closePaymentModal();
-                toggleCart();
+                alert("Transaksi Berjaya!");
+                cart = []; discount = 0; document.getElementById('amount-paid').value = '';
+                updateUI(); closePaymentModal(); toggleCart();
             } catch(e) { alert("Error: " + e.message); }
         }
     </script>
