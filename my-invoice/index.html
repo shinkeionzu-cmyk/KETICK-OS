@@ -45,7 +45,9 @@
         window.updateDocID = () => {
             const type = document.getElementById('doc-type').value;
             const prefix = type === 'QUOTATION' ? 'QT' : (type === 'RECEIPT' ? 'RC' : 'INV');
-            const nextId = String((window.currentInvoices?.length || 0) + 1).padStart(4, '0');
+            // Kira dokumen berdasarkan jenis yang sama untuk elak nombor melompat jauh
+            const sameTypeDocs = window.currentInvoices?.filter(d => (d.docType || 'INVOICE') === type) || [];
+            const nextId = String(sameTypeDocs.length + 1).padStart(4, '0');
             document.getElementById('doc-id').innerText = `${prefix}-2026-${nextId}`;
         };
 
@@ -78,9 +80,11 @@
                     payload.createdAt = serverTimestamp();
                     await addDoc(collection(db, "invoices"), payload);
                 }
+                return true; // Berhasil
             } catch (e) {
                 console.error("Ralat: ", e);
                 alert("Gagal menyimpan data.");
+                return false;
             }
         };
 
@@ -101,9 +105,6 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; padding-bottom: 50px; }
         .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .tab-active { background: #3b82f6; opacity: 1 !important; }
-        .type-invoice { color: #3b82f6; }
-        .type-quotation { color: #f59e0b; }
-        .type-receipt { color: #10b981; }
         @media print { .no-print { display: none !important; } body { background: white !important; color: black !important; padding: 0; } .glass { border: none; background: transparent; } }
     </style>
 </head>
@@ -114,7 +115,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h1 class="text-xl font-black uppercase tracking-widest text-blue-500">Ketick Billing</h1>
-                    <p class="text-[9px] text-slate-500 font-bold tracking-widest uppercase">Multi-Doc Mode</p>
+                    <p class="text-[9px] text-slate-500 font-bold tracking-widest uppercase">Direct Sync Mode</p>
                 </div>
                 <select id="doc-type" onchange="updateUIForType()" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-bold uppercase outline-none">
                     <option value="INVOICE">Invoice</option>
@@ -131,6 +132,9 @@
 
         <div id="section-creator">
             <div class="no-print flex gap-2 mb-4 justify-end">
+                <button onclick="resetForm()" class="bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-700 transition">
+                    <i class="fas fa-file-plus mr-1"></i> BARU
+                </button>
                 <button onclick="window.print()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-600 transition">
                     <i class="fas fa-print mr-1"></i> CETAK
                 </button>
@@ -212,7 +216,6 @@
             
             titleEl.innerText = type;
             
-            // Tukar warna tema mengikut jenis
             if(type === 'QUOTATION') {
                 titleEl.className = "text-3xl font-black uppercase tracking-tighter text-amber-500";
                 stamp.classList.add('hidden');
@@ -252,19 +255,31 @@
             calculateTotal();
         }
 
+        function resetForm() {
+            document.getElementById('custName').value = '';
+            document.getElementById('custPhone').value = '';
+            document.getElementById('doc-date').valueAsDate = new Date();
+            document.getElementById('item-list').innerHTML = '';
+            addItem();
+            calculateTotal();
+            window.updateDocID(); // Auto-update nombor siri baru
+            document.getElementById('save-btn-text').innerText = "SIMPAN & PDF";
+        }
+
         async function generatePDF(shouldSave = false) {
-            const type = document.getElementById('doc-type').value;
             const invNo = document.getElementById('doc-id').innerText;
             const element = document.getElementById('document-area');
             
             if(shouldSave) {
-                await window.saveToFirestore({
+                const success = await window.saveToFirestore({
                     invoiceNo: invNo,
                     customerName: document.getElementById('custName').value || 'Pelanggan',
                     customerPhone: document.getElementById('custPhone').value,
                     totalAmount: document.getElementById('grand-total').innerText,
                     date: document.getElementById('doc-date').value
                 });
+                
+                if(!success) return;
             }
 
             const opt = {
@@ -274,7 +289,10 @@
                 html2canvas: { scale: 2, backgroundColor: '#020617' },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-            html2pdf().set(opt).from(element).save();
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                if(shouldSave) resetForm(); // Kosongkan borang hanya selepas PDF selesai
+            });
         }
 
         window.renderHistoryUI = (invoices) => {
