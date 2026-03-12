@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accounting | KETICK OS</title>
+    <title>Accounting & Finance | KETICK OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
@@ -12,116 +13,207 @@
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .card-income { border-top: 4px solid #10b981; }
         .card-expense { border-top: 4px solid #ef4444; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="p-4 lg:p-8">
+<body class="p-4 lg:p-8 no-scrollbar pb-20">
+
+    <div class="mb-8">
+        <h2 class="text-2xl font-black tracking-tighter uppercase text-blue-500">Accounting <span class="text-white">& Finance</span></h2>
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Pusat Kawalan Aliran Tunai KETICK OS</p>
+    </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="p-6 rounded-3xl glass card-income shadow-xl shadow-emerald-900/5">
             <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Total Income</p>
             <h3 class="text-2xl font-black text-emerald-500" id="total-income">RM 0.00</h3>
-            <p class="text-[10px] text-slate-400 mt-2">Bulan Mac 2026</p>
         </div>
         <div class="p-6 rounded-3xl glass card-expense shadow-xl shadow-red-900/5">
             <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Total Expenses</p>
             <h3 class="text-2xl font-black text-red-500" id="total-expenses">RM 0.00</h3>
-            <p class="text-[10px] text-slate-400 mt-2">Bil Elektrik, Sewa, Stok</p>
         </div>
         <div class="p-6 rounded-3xl glass border-t-4 border-t-blue-600 shadow-xl shadow-blue-900/5">
             <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Net Profit</p>
             <h3 class="text-2xl font-black text-blue-500" id="net-profit">RM 0.00</h3>
-            <p class="text-[10px] text-slate-400 mt-2">Untung Bersih</p>
         </div>
     </div>
 
+    <div class="glass p-6 rounded-[2.5rem] mb-8 border border-white/5">
+        <div class="flex justify-between items-center mb-6">
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Analisis Aliran Tunai (7 Rekod Terkini)</p>
+            <i class="fas fa-chart-line text-blue-500 text-sm"></i>
+        </div>
+        <canvas id="financeChart" height="120"></canvas>
+    </div>
+
     <div class="mb-8 p-6 rounded-3xl glass border border-slate-800">
-        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-            <i class="fas fa-plus-circle text-blue-500"></i> Rekod Transaksi Baru
+        <h2 class="text-sm font-bold mb-4 flex items-center gap-2 uppercase tracking-tight">
+            <i class="fas fa-plus-circle text-blue-500"></i> Rekod Transaksi
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input type="text" id="desc" placeholder="Keterangan (cth: Jualan Kasut)" class="p-3 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:ring-1 focus:ring-blue-600">
-            <input type="number" id="amount" placeholder="Jumlah (RM)" class="p-3 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:ring-1 focus:ring-blue-600">
-            <select id="type" class="p-3 rounded-xl bg-slate-900 border border-slate-800 outline-none">
-                <option value="income">Pendapatan (+)</option>
-                <option value="expense">Perbelanjaan (-)</option>
+            <input type="text" id="desc" placeholder="Keterangan" class="p-3 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:ring-1 focus:ring-blue-600 text-xs">
+            <input type="number" id="amount" placeholder="Jumlah (RM)" class="p-3 rounded-xl bg-slate-900 border border-slate-800 outline-none focus:ring-1 focus:ring-blue-600 text-xs">
+            <select id="type" class="p-3 rounded-xl bg-slate-900 border border-slate-800 outline-none text-xs text-slate-400">
+                <option value="income">Income (+)</option>
+                <option value="expense">Expense (-)</option>
             </select>
-            <button onclick="addTransaction()" class="bg-blue-600 hover:bg-blue-700 p-3 rounded-xl font-bold transition">SIMPAN</button>
+            <button onclick="addTransaction()" id="saveBtn" class="bg-blue-600 hover:bg-blue-700 p-3 rounded-xl font-black transition text-[10px] uppercase tracking-widest">SIMPAN DATA</button>
         </div>
     </div>
 
     <div class="rounded-3xl glass border border-slate-800 overflow-hidden">
         <div class="p-5 border-b border-slate-800 flex justify-between items-center">
-            <h2 class="font-bold uppercase text-xs tracking-widest">Sejarah Transaksi</h2>
-            <button onclick="clearHistory()" class="text-[10px] text-red-500 hover:underline">Padam Semua</button>
+            <h2 class="font-bold uppercase text-[10px] tracking-widest text-slate-400">Sejarah Transaksi</h2>
+            <p id="syncStatus" class="text-[8px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded">LIVE SYNC</p>
         </div>
-        <div id="transaction-list" class="divide-y divide-slate-800 max-h-[400px] overflow-y-auto">
-            </div>
+        <div id="transaction-list" class="divide-y divide-slate-800 max-h-[400px] overflow-y-auto no-scrollbar">
+            <div class="p-10 text-center text-slate-500 animate-pulse text-xs">Menyambung ke Firestore...</div>
+        </div>
     </div>
 
-    <script>
-        let transactions = JSON.parse(localStorage.getItem('ketick_tx')) || [
-            { id: 1, desc: "Baki Awal", amount: 1000, type: "income", date: "2026-03-01" }
-        ];
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-        function renderAccounting() {
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCT2nlX1fjiGvXAuaBWein6e1BQOOCH8ew",
+            authDomain: "ketick-os.firebaseapp.com",
+            projectId: "ketick-os",
+            storageBucket: "ketick-os.firebasestorage.app",
+            messagingSenderId: "407192673747",
+            appId: "1:407192673747:web:9196c8d72d77a642f02326"
+        };
+        
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let myChart;
+
+        // Inisialisasi Chart.js
+        function initChart(labels, dataPoints) {
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Untung Bersih (RM)',
+                        data: dataPoints,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#3b82f6'
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 8 } } }
+                    }
+                }
+            });
+        }
+
+        // Listen Data Real-time
+        db.collection("accounting").orderBy("createdAt", "desc").onSnapshot(snap => {
             const list = document.getElementById('transaction-list');
             let income = 0;
             let expense = 0;
+            let html = "";
+            
+            // Data untuk Chart
+            let chartLabels = [];
+            let chartData = [];
 
-            list.innerHTML = transactions.map(tx => {
-                if(tx.type === 'income') income += parseFloat(tx.amount);
-                else expense += parseFloat(tx.amount);
+            if(snap.empty) {
+                list.innerHTML = '<div class="p-10 text-center text-slate-600 text-xs">TIADA REKOD</div>';
+                initChart(['Sila Isi Data'], [0]);
+                return;
+            }
 
-                return `
+            snap.forEach(doc => {
+                const tx = doc.data();
+                const amt = parseFloat(tx.amount || 0);
+                
+                if(tx.type === 'income') income += amt;
+                else expense += amt;
+
+                const dateObj = tx.createdAt ? tx.createdAt.toDate() : new Date();
+                const dateDisplay = dateObj.toLocaleDateString('ms-MY', {day:'2-digit', month:'short'});
+
+                // Ambil 7 rekod terkini untuk carta
+                if (chartLabels.length < 7) {
+                    chartLabels.unshift(dateDisplay);
+                    chartData.unshift(income - expense);
+                }
+
+                html += `
                     <div class="p-4 flex justify-between items-center hover:bg-white/5 transition">
                         <div>
-                            <p class="font-bold text-sm">${tx.desc}</p>
-                            <p class="text-[10px] text-slate-500">${tx.date}</p>
+                            <p class="font-bold text-xs uppercase tracking-tight text-slate-200">${tx.desc}</p>
+                            <p class="text-[9px] text-slate-500 font-bold">${dateDisplay}</p>
                         </div>
-                        <div class="text-right">
-                            <p class="font-bold ${tx.type === 'income' ? 'text-emerald-500' : 'text-red-500'}">
-                                ${tx.type === 'income' ? '+' : '-'} RM ${parseFloat(tx.amount).toFixed(2)}
-                            </p>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <p class="font-black text-xs ${tx.type === 'income' ? 'text-emerald-500' : 'text-red-400'}">
+                                    ${tx.type === 'income' ? '+' : '-'} RM ${amt.toFixed(2)}
+                                </p>
+                            </div>
+                            <button onclick="deleteTx('${doc.id}')" class="text-slate-800 hover:text-red-500 transition-colors">
+                                <i class="fas fa-trash-alt text-[10px]"></i>
+                            </button>
                         </div>
                     </div>
                 `;
-            }).reverse().join('');
+            });
 
+            list.innerHTML = html;
             document.getElementById('total-income').innerText = `RM ${income.toFixed(2)}`;
             document.getElementById('total-expenses').innerText = `RM ${expense.toFixed(2)}`;
             document.getElementById('net-profit').innerText = `RM ${(income - expense).toFixed(2)}`;
             
-            localStorage.setItem('ketick_tx', JSON.stringify(transactions));
-        }
+            initChart(chartLabels, chartData);
+        });
 
-        function addTransaction() {
+        async function addTransaction() {
             const desc = document.getElementById('desc').value;
             const amount = document.getElementById('amount').value;
             const type = document.getElementById('type').value;
+            const btn = document.getElementById('saveBtn');
             
             if(!desc || !amount) return alert("Sila isi maklumat!");
 
-            transactions.push({
-                id: Date.now(),
-                desc: desc,
-                amount: amount,
-                type: type,
-                date: new Date().toISOString().split('T')[0]
-            });
+            btn.disabled = true;
+            btn.innerText = "MENYIMPAN...";
 
-            document.getElementById('desc').value = '';
-            document.getElementById('amount').value = '';
-            renderAccounting();
-        }
-
-        function clearHistory() {
-            if(confirm("Padam sejarah transaksi?")) {
-                transactions = [];
-                renderAccounting();
+            try {
+                await db.collection("accounting").add({
+                    desc: desc.toUpperCase(),
+                    amount: parseFloat(amount),
+                    type: type,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                document.getElementById('desc').value = '';
+                document.getElementById('amount').value = '';
+            } catch (e) {
+                alert("Ralat: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "SIMPAN DATA";
             }
         }
 
-        window.onload = renderAccounting;
+        async function deleteTx(id) {
+            if(confirm("Padam rekod ini secara kekal?")) {
+                await db.collection("accounting").doc(id).delete();
+            }
+        }
     </script>
 </body>
 </html>
