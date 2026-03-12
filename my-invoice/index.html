@@ -102,6 +102,8 @@
 
         function listenToInvoices() {
             const q = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
+            
+            // Pengendalian onSnapshot dengan Error Handling untuk Firestore Rules
             onSnapshot(q, (snapshot) => {
                 const invoices = [];
                 snapshot.forEach((doc) => {
@@ -112,6 +114,12 @@
                 if (!activeEditId) {
                     const nextId = String(invoices.length + 1).padStart(4, '0');
                     document.getElementById('doc-id').innerText = `INV-2026-${nextId}`;
+                }
+            }, (error) => {
+                console.error("Akses Ditolak: ", error.message);
+                if(error.code === 'permission-denied') {
+                    alert("Sesi tamat atau akses disekat oleh Security Rules. Sila log masuk semula.");
+                    signOut(auth);
                 }
             });
         }
