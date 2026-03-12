@@ -14,44 +14,51 @@
         .modal.active { display: flex; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 pb-20">
 
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-xl font-black uppercase tracking-tight">CRM Contacts</h1>
+            <h1 class="text-xl font-black uppercase tracking-tight text-blue-500">CRM Contacts</h1>
             <p class="text-[10px] text-slate-500 font-bold uppercase">Urus Pelanggan & Pembekal</p>
         </div>
-        <button onclick="toggleModal(true)" class="bg-blue-600 hover:bg-blue-700 w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/20 transition">
+        <button onclick="openAddModal()" class="bg-blue-600 hover:bg-blue-700 w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/20 transition">
             <i class="fas fa-user-plus"></i>
         </button>
     </div>
 
     <div class="flex gap-2 mb-6 p-1 glass rounded-2xl">
-        <button onclick="filterContacts('SEMUA')" class="filter-btn flex-1 py-3 rounded-xl bg-blue-600 text-[10px] font-bold transition">SEMUA</button>
-        <button onclick="filterContacts('Pelanggan')" class="filter-btn flex-1 py-3 rounded-xl text-[10px] font-bold opacity-50 transition">PELANGGAN</button>
-        <button onclick="filterContacts('Pembekal')" class="filter-btn flex-1 py-3 rounded-xl text-[10px] font-bold opacity-50 transition">PEMBEKAL</button>
+        <button onclick="filterContacts('SEMUA', event)" class="filter-btn flex-1 py-3 rounded-xl bg-blue-600 text-[10px] font-bold transition">SEMUA</button>
+        <button onclick="filterContacts('Pelanggan', event)" class="filter-btn flex-1 py-3 rounded-xl text-[10px] font-bold opacity-50 transition">PELANGGAN</button>
+        <button onclick="filterContacts('Pembekal', event)" class="filter-btn flex-1 py-3 rounded-xl text-[10px] font-bold opacity-50 transition">PEMBEKAL</button>
     </div>
 
-    <div id="contact-list" class="space-y-3 pb-24">
+    <div class="relative mb-6">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+        <input type="text" id="searchInput" oninput="searchContacts()" placeholder="Cari nama atau telefon..." class="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-10 pr-4 text-xs outline-none focus:border-blue-500 transition">
+    </div>
+
+    <div id="contact-list" class="space-y-3">
         <div class="text-center py-10 opacity-30 text-xs">Memuatkan senarai...</div>
     </div>
 
     <div id="contactModal" class="modal">
-        <div class="glass w-full max-w-md p-8 rounded-[2.5rem] relative">
-            <h2 class="text-xl font-bold mb-6">Daftar Kenalan Baru</h2>
+        <div class="glass w-full max-w-md p-8 rounded-[2.5rem] relative border border-white/10">
+            <h2 id="modalTitle" class="text-xl font-bold mb-6 text-blue-500">Daftar Kenalan Baru</h2>
+            <input type="hidden" id="editId">
+            
             <div class="space-y-4">
                 <div>
                     <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">Nama Penuh</label>
-                    <input type="text" id="cName" placeholder="Contoh: Ali Bin Abu" class="w-full p-4 rounded-2xl bg-white/5 border border-white/10 outline-none mt-1">
+                    <input type="text" id="cName" placeholder="Contoh: Ali Bin Abu" class="w-full p-4 rounded-2xl bg-white/5 border border-white/10 outline-none mt-1 focus:border-blue-500 text-sm">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">No. Telefon</label>
-                        <input type="tel" id="cPhone" placeholder="6012..." class="w-full p-4 rounded-2xl bg-white/5 border border-white/10 outline-none mt-1">
+                        <input type="tel" id="cPhone" placeholder="6012..." class="w-full p-4 rounded-2xl bg-white/5 border border-white/10 outline-none mt-1 focus:border-blue-500 text-sm">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">Kategori</label>
-                        <select id="cType" class="w-full p-4 rounded-2xl bg-[#020617] border border-white/10 outline-none mt-1 text-white">
+                        <select id="cType" class="w-full p-4 rounded-2xl bg-[#0d1117] border border-white/10 outline-none mt-1 text-white text-sm">
                             <option value="Pelanggan">Pelanggan</option>
                             <option value="Pembekal">Pembekal</option>
                         </select>
@@ -59,91 +66,161 @@
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">Alamat Penuh</label>
-                    <textarea id="cAddress" rows="3" placeholder="No. 123, Jalan Baru..." class="w-full p-4 rounded-2xl bg-white/5 border border-white/10 outline-none mt-1"></textarea>
+                    <textarea id="cAddress" rows="3" placeholder="No. 123, Jalan Baru..." class="w-full p-4 rounded-2xl bg-white/5 border border-white/10 outline-none mt-1 focus:border-blue-500 text-sm"></textarea>
                 </div>
                 <div class="flex gap-3 pt-4">
-                    <button onclick="toggleModal(false)" class="flex-1 p-4 rounded-2xl hover:bg-white/5 font-bold transition">Batal</button>
-                    <button onclick="saveContact()" class="flex-1 p-4 rounded-2xl bg-blue-600 hover:bg-blue-700 font-bold transition">Simpan</button>
+                    <button onclick="toggleModal(false)" class="flex-1 p-4 rounded-2xl hover:bg-white/5 font-bold transition text-xs">BATAL</button>
+                    <button onclick="handleSave()" class="flex-1 p-4 rounded-2xl bg-blue-600 hover:bg-blue-700 font-bold transition text-xs shadow-lg shadow-blue-600/20">SIMPAN DATA</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script type="module">
-        import { db, collection, onSnapshot, addDoc, query, orderBy } from "../firebase-config.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const contactList = document.getElementById('contact-list');
+        // Firebase Config (Sama seperti fail Invoicing anda)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCT2nlX1fjiGvXAuaBWein6e1BQOOCH8ew",
+            authDomain: "ketick-os.firebaseapp.com",
+            projectId: "ketick-os",
+            storageBucket: "ketick-os.firebasestorage.app",
+            messagingSenderId: "407192673747",
+            appId: "1:407192673747:web:9196c8d72d77a642f02326",
+            measurementId: "G-YH99RHS74G"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const colRef = collection(db, "contacts");
+
         let allContacts = [];
 
-        // Ambil Data Real-time
-        onSnapshot(query(collection(db, "contacts"), orderBy("name", "asc")), (snapshot) => {
+        // --- REALTIME LISTENER ---
+        onSnapshot(query(colRef, orderBy("name", "asc")), (snapshot) => {
             allContacts = [];
             snapshot.forEach(doc => allContacts.push({ id: doc.id, ...doc.data() }));
             renderContacts(allContacts);
         });
 
-        function renderContacts(data) {
+        // --- RENDER UI ---
+        window.renderContacts = (data) => {
+            const contactList = document.getElementById('contact-list');
             if (data.length === 0) {
-                contactList.innerHTML = `<div class="text-center py-10 opacity-30 text-xs">Tiada rekod dijumpai.</div>`;
+                contactList.innerHTML = `<div class="text-center py-10 opacity-30 text-xs uppercase tracking-widest">Tiada rekod dijumpai.</div>`;
                 return;
             }
 
             contactList.innerHTML = data.map(c => `
-                <div class="glass p-5 rounded-[1.8rem] flex justify-between items-center border-l-4 ${c.type === 'Pelanggan' ? 'border-blue-500' : 'border-purple-500'}">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center font-black text-blue-500">
-                            ${c.name.charAt(0).toUpperCase()}
+                <div class="glass p-5 rounded-[1.8rem] border border-white/5 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full ${c.type === 'Pelanggan' ? 'bg-blue-500' : 'bg-purple-500'}"></div>
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center font-black text-blue-500 text-xs">
+                                ${c.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <p class="text-sm font-extrabold text-white leading-tight">${c.name}</p>
+                                <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-1">${c.type}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-extrabold text-white">${c.name}</p>
-                            <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-1">${c.type}</p>
-                            <p class="text-[9px] text-slate-400 max-w-[150px] truncate"><i class="fas fa-map-marker-alt mr-1"></i>${c.address || 'Tiada alamat'}</p>
+                        <div class="flex gap-1">
+                            <button onclick="editContact('${c.id}')" class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 hover:text-blue-500 transition"><i class="fas fa-edit text-[10px]"></i></button>
+                            <button onclick="deleteContact('${c.id}')" class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 hover:text-red-500 transition"><i class="fas fa-trash text-[10px]"></i></button>
                         </div>
                     </div>
+                    
+                    <p class="text-[10px] text-slate-400 mt-2 mb-4 px-1 line-clamp-1"><i class="fas fa-map-marker-alt mr-1 text-blue-500"></i>${c.address || 'Tiada alamat'}</p>
+
                     <div class="flex gap-2">
-                        <a href="tel:${c.phone}" class="w-10 h-10 glass rounded-xl flex items-center justify-center text-emerald-500 border border-white/5"><i class="fas fa-phone-alt text-xs"></i></a>
-                        <a href="https://wa.me/${c.phone}" target="_blank" class="w-10 h-10 glass rounded-xl flex items-center justify-center text-blue-400 border border-white/5"><i class="fab fa-whatsapp text-sm"></i></a>
+                        <a href="tel:${c.phone}" class="flex-1 py-2 glass rounded-xl flex items-center justify-center text-emerald-500 text-[10px] font-bold gap-2"><i class="fas fa-phone-alt"></i> CALL</a>
+                        <a href="https://wa.me/${c.phone.replace(/\D/g,'')}" target="_blank" class="flex-1 py-2 glass rounded-xl flex items-center justify-center text-blue-400 text-[10px] font-bold gap-2"><i class="fab fa-whatsapp text-xs"></i> WHATSAPP</a>
                     </div>
                 </div>
             `).join('');
-        }
+        };
 
-        window.saveContact = async () => {
+        // --- ACTIONS ---
+        window.handleSave = async () => {
+            const id = document.getElementById('editId').value;
             const name = document.getElementById('cName').value;
             const phone = document.getElementById('cPhone').value;
             const type = document.getElementById('cType').value;
             const address = document.getElementById('cAddress').value;
 
-            if (!name || !phone) return alert("Nama dan No. Telefon wajib diisi!");
+            if (!name || !phone) return alert("Sila isi Nama dan Telefon!");
+
+            const payload = { 
+                name, phone, type, address, 
+                updatedAt: serverTimestamp() 
+            };
 
             try {
-                await addDoc(collection(db, "contacts"), {
-                    name, phone, type, address,
-                    createdAt: new Date()
-                });
+                if (id) {
+                    await updateDoc(doc(db, "contacts", id), payload);
+                } else {
+                    payload.createdAt = serverTimestamp();
+                    await addDoc(colRef, payload);
+                }
                 toggleModal(false);
-                document.getElementById('cName').value = "";
-                document.getElementById('cPhone').value = "";
-                document.getElementById('cAddress').value = "";
-            } catch (e) { console.error(e); }
+            } catch (e) { alert("Ralat: " + e.message); }
         };
 
-        window.filterContacts = (type) => {
-            // Update UI Button
+        window.editContact = (id) => {
+            const c = allContacts.find(item => item.id === id);
+            if (!c) return;
+
+            document.getElementById('modalTitle').innerText = "Kemaskini Kenalan";
+            document.getElementById('editId').value = c.id;
+            document.getElementById('cName').value = c.name;
+            document.getElementById('cPhone').value = c.phone;
+            document.getElementById('cType').value = c.type;
+            document.getElementById('cAddress').value = c.address || '';
+            
+            toggleModal(true);
+        };
+
+        window.deleteContact = async (id) => {
+            if (confirm("Adakah anda pasti untuk padam kenalan ini?")) {
+                try {
+                    await deleteDoc(doc(db, "contacts", id));
+                } catch (e) { alert(e.message); }
+            }
+        };
+
+        window.filterContacts = (type, e) => {
             const btns = document.querySelectorAll('.filter-btn');
             btns.forEach(btn => {
                 btn.classList.add('opacity-50');
                 btn.classList.remove('bg-blue-600');
             });
-            event.target.classList.remove('opacity-50');
-            event.target.classList.add('bg-blue-600');
+            e.currentTarget.classList.remove('opacity-50');
+            e.currentTarget.classList.add('bg-blue-600');
 
             if (type === 'SEMUA') {
                 renderContacts(allContacts);
             } else {
-                const filtered = allContacts.filter(c => c.type === type);
-                renderContacts(filtered);
+                renderContacts(allContacts.filter(c => c.type === type));
             }
+        };
+
+        window.searchContacts = () => {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allContacts.filter(c => 
+                c.name.toLowerCase().includes(query) || 
+                c.phone.includes(query)
+            );
+            renderContacts(filtered);
+        };
+
+        window.openAddModal = () => {
+            document.getElementById('modalTitle').innerText = "Daftar Kenalan Baru";
+            document.getElementById('editId').value = "";
+            document.getElementById('cName').value = "";
+            document.getElementById('cPhone').value = "";
+            document.getElementById('cAddress').value = "";
+            toggleModal(true);
         };
 
         window.toggleModal = (show) => {
