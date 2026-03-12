@@ -8,243 +8,82 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: #020617; 
-            color: white; 
-            height: 100vh; 
-            overflow: hidden; 
-            margin: 0;
-        }
-
-        .glass { 
-            background: rgba(255, 255, 255, 0.03); 
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255, 255, 255, 0.05); 
-        }
-
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; height: 100vh; overflow: hidden; margin: 0; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* Layout Grid - Dibersihkan dari double header/nav */
+        /* Layout Grid */
         .pos-grid { 
-            display: grid; 
-            grid-template-rows: auto 1fr 280px; 
-            height: 100vh; 
-            gap: 8px; 
-            padding: 8px;
-            padding-bottom: 75px; /* Ruang untuk Nav di bawah */
+            display: grid; grid-template-rows: auto 1fr auto; 
+            height: 100vh; gap: 8px; padding: 8px;
         }
 
-        #productGrid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 8px; 
-        }
-
-        .product-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 1.2rem;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .product-card-img { 
-            height: 55px; width: 55px; 
-            object-fit: cover; border-radius: 10px; 
-            margin-bottom: 6px; background: #1e293b;
-        }
-
-        /* NAVIGATION BAR - Hanya satu & Auto-Hide */
-        #bottomNav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #020617; /* Ikut warna asal yang malap */
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 50;
-            padding: 12px 8px 20px 8px;
-        }
-
-        .nav-hidden {
-            transform: translateY(100%);
-        }
-
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: 0.5; font-size: 8px; font-weight: 800; text-transform: uppercase; }
-        .nav-item.active { opacity: 1; color: #3b82f6; }
-        .btn-press:active { transform: scale(0.95); }
+        #productGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .product-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.2rem; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .product-card-img { height: 50px; width: 50px; object-fit: cover; border-radius: 10px; background: #1e293b; }
     </style>
 </head>
 <body>
 
-    <div class="pos-grid" id="mainLayout">
+    <div class="pos-grid">
         <header class="flex justify-between items-center px-2 py-1">
-            <div>
-                <h1 class="text-blue-500 font-black text-xl leading-none">POS</h1>
-                <p class="text-[7px] text-emerald-500 font-bold uppercase tracking-widest mt-1">• System Online</p>
-            </div>
-            <div class="w-9 h-9 rounded-full bg-blue-600 border border-white/10 flex items-center justify-center text-[11px] font-black">AD</div>
+            <h1 class="text-blue-500 font-black text-xl leading-none">POS TERMINAL</h1>
         </header>
 
         <section class="flex flex-col overflow-hidden bg-slate-900/20 rounded-[2rem] border border-white/5">
             <div class="p-3 flex justify-between items-center glass border-b border-white/5">
-                <span class="text-[9px] font-black uppercase text-slate-500 tracking-widest">Katalog</span>
-                <input type="text" id="searchItem" placeholder="Cari..." class="bg-white/5 border border-white/10 rounded-xl py-1 px-3 text-[10px] w-32 text-white outline-none focus:border-blue-500">
+                <input type="text" id="searchItem" placeholder="Cari..." class="bg-white/5 border border-white/10 rounded-xl py-1 px-3 text-[10px] w-full text-white outline-none">
             </div>
             <div id="productGridContainer" class="flex-grow overflow-y-auto p-3 no-scrollbar">
                 <div id="productGrid"></div>
             </div>
         </section>
 
-        <section class="flex flex-col bg-slate-900/40 rounded-[2rem] border border-white/10 glass overflow-hidden mb-[10px]">
-            <div class="p-4 border-b border-white/5 flex justify-between items-center">
-                <h2 class="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Pesanan Aktif</h2>
-                <button onclick="clearCart()" class="text-[8px] text-red-500 font-black uppercase bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20">Clear</button>
-            </div>
-            <div id="cartItems" class="flex-grow overflow-y-auto p-4 space-y-2 no-scrollbar"></div>
-            <div class="p-5 bg-blue-600/5 border-t border-white/5">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-[10px] font-bold text-slate-500 uppercase">Total</span>
-                    <span id="totalAmount" class="text-3xl font-black text-emerald-400">RM 0.00</span>
-                </div>
-                <button onclick="openPayment()" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] btn-press shadow-lg shadow-blue-600/20">
-                    Bayar Sekarang
-                </button>
+        <section class="bg-slate-900/40 rounded-[2rem] border border-white/10 glass p-5 mb-2">
+            <div class="flex justify-between items-center">
+                <span id="totalAmount" class="text-3xl font-black text-emerald-400">RM 0.00</span>
+                <button class="bg-blue-600 px-6 py-3 rounded-xl font-black text-[10px] uppercase">Bayar</button>
             </div>
         </section>
-    </div>
-
-    <nav id="bottomNav" class="flex justify-around items-center">
-        <div class="nav-item"><i class="fas fa-th-large text-lg"></i><span>Home</span></div>
-        <div class="nav-item active"><i class="fas fa-cash-register text-lg"></i><span>POS</span></div>
-        <div class="nav-item"><i class="fas fa-shopping-cart text-lg"></i><span>Sales</span></div>
-        <div class="nav-item"><i class="fas fa-box text-lg"></i><span>Stock</span></div>
-        <div class="nav-item"><i class="fas fa-ellipsis-h text-lg"></i><span>More</span></div>
-    </nav>
-
-    <div id="payment-modal" class="fixed inset-0 bg-[#020617]/95 z-[100] hidden flex items-end md:items-center justify-center p-4 backdrop-blur-md">
-        <div class="w-full max-w-md glass rounded-[3rem] border border-white/10 p-8 shadow-2xl">
-            <div class="text-center mb-6">
-                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Jumlah Bayaran</p>
-                <h2 id="pay-grand-total" class="text-5xl font-black text-blue-500 tracking-tighter">RM 0.00</h2>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <button onclick="setPaymentMethod('cash')" id="btn-cash" class="py-4 rounded-2xl border-2 border-blue-600 bg-blue-600/10 text-blue-500 font-black text-[10px] uppercase">Tunai</button>
-                <button onclick="setPaymentMethod('qr')" id="btn-qr" class="py-4 rounded-2xl border-2 border-white/5 bg-white/5 text-slate-400 font-black text-[10px] uppercase">QR / Bank</button>
-            </div>
-
-            <div id="cash-input-section" class="space-y-4">
-                <input type="number" id="cash-received" oninput="calculateChange()" placeholder="Masukkan Tunai" 
-                    class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-2xl font-black text-center text-white outline-none">
-                <div class="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-center">
-                    <p class="text-[10px] font-bold text-emerald-500 uppercase mb-1">Baki Pulangan</p>
-                    <h3 id="pay-change" class="text-3xl font-black text-emerald-400">RM 0.00</h3>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mt-8">
-                <button onclick="closePayment()" class="py-4 font-black text-[10px] uppercase text-slate-500">Batal</button>
-                <button onclick="finalizeSale()" id="btn-finalize" class="py-4 bg-blue-600 rounded-2xl font-black text-[10px] uppercase">Sahkan</button>
-            </div>
-        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCT2nlX1fjiGvXAuaBWein6e1BQOOCH8ew",
-            authDomain: "ketick-os.firebaseapp.com",
-            projectId: "ketick-os",
-            storageBucket: "ketick-os.firebasestorage.app",
-            messagingSenderId: "407192673747",
-            appId: "1:407192673747:web:9196c8d72d77a642f02326"
-        };
+        const firebaseConfig = { /* Config Firebase Awak */ };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // LOGIC AUTO-HIDE (Pada Nav asal yang malap)
-        const nav = document.getElementById('bottomNav');
+        // 2. LOGIK HANTAR ARAHAN KE PARENT
         const scrollContainer = document.getElementById('productGridContainer');
         let lastScrollY = 0;
 
         scrollContainer.addEventListener('scroll', () => {
             if (scrollContainer.scrollTop > lastScrollY && scrollContainer.scrollTop > 20) {
-                nav.classList.add('nav-hidden');
+                // Beritahu parent (index.html) untuk sorok nav
+                window.parent.postMessage('hideNav', '*');
             } else {
-                nav.classList.remove('nav-hidden');
+                // Beritahu parent (index.html) untuk tunjuk nav
+                window.parent.postMessage('showNav', '*');
             }
             lastScrollY = scrollContainer.scrollTop;
         });
 
-        // Produk & Cart (Sama macam asal)
-        let cart = [];
-        let grandTotal = 0;
-        let currentMethod = 'cash';
-
+        // Load Produk dari Firestore
         db.collection("inventory").onSnapshot(snap => {
             const grid = document.getElementById('productGrid');
             grid.innerHTML = '';
             snap.forEach(doc => {
-                const p = { id: doc.id, ...doc.data() };
-                const card = document.createElement('div');
-                card.className = "product-card btn-press cursor-pointer";
-                card.onclick = () => addToCart(p);
-                card.innerHTML = `
-                    <img src="${p.image || 'https://via.placeholder.com/150'}" class="product-card-img">
-                    <h3 class="text-[8px] font-extrabold uppercase truncate w-full mb-1">${p.name}</h3>
-                    <p class="text-blue-400 font-black text-[10px]">RM ${parseFloat(p.price).toFixed(2)}</p>
-                `;
-                grid.appendChild(card);
-            });
-        });
-
-        function addToCart(p) {
-            const exist = cart.find(i => i.id === p.id);
-            if(exist) exist.qty++; else cart.push({...p, qty: 1});
-            renderCart();
-        }
-
-        function renderCart() {
-            const container = document.getElementById('cartItems');
-            grandTotal = 0; container.innerHTML = '';
-            cart.forEach((item, index) => {
-                const sub = item.price * item.qty;
-                grandTotal += sub;
-                container.innerHTML += `
-                    <div class="flex items-center justify-between p-3 glass rounded-xl border border-white/5">
-                        <div class="flex flex-col"><span class="text-[9px] font-black uppercase">${item.name}</span><span class="text-[8px] text-blue-400">${item.qty}x</span></div>
-                        <span class="text-[11px] font-black">RM ${sub.toFixed(2)}</span>
+                const p = doc.data();
+                grid.innerHTML += `
+                    <div class="product-card">
+                        <img src="${p.image || ''}" class="product-card-img">
+                        <p class="text-[7px] font-bold mt-2">${p.name}</p>
+                        <p class="text-blue-400 font-black text-[9px]">RM ${p.price}</p>
                     </div>`;
             });
-            document.getElementById('totalAmount').innerText = `RM ${grandTotal.toFixed(2)}`;
-        }
-
-        function clearCart() { cart = []; renderCart(); }
-        function openPayment() { if(cart.length > 0) { document.getElementById('pay-grand-total').innerText = `RM ${grandTotal.toFixed(2)}`; document.getElementById('payment-modal').classList.remove('hidden'); } }
-        function closePayment() { document.getElementById('payment-modal').classList.add('hidden'); }
-        
-        function setPaymentMethod(m) {
-            currentMethod = m;
-            document.getElementById('cash-input-section').classList.toggle('hidden', m !== 'cash');
-        }
-
-        function calculateChange() {
-            const rec = parseFloat(document.getElementById('cash-received').value) || 0;
-            document.getElementById('pay-change').innerText = `RM ${Math.max(0, rec - grandTotal).toFixed(2)}`;
-        }
-
-        async function finalizeSale() {
-            alert("Selesai!");
-            clearCart(); closePayment();
-        }
+        });
     </script>
 </body>
 </html>
