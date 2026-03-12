@@ -5,21 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Management | KETICK OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; min-height: 100vh; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .search-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+        
+        @media print {
+            body * { visibility: hidden; }
+            #receipt-print, #receipt-print * { visibility: visible; }
+            #receipt-print { position: absolute; left: 0; top: 0; width: 100%; color: black !important; background: white !important; }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
-<body class="p-4 lg:p-8">
+<body class="p-4 lg:p-8 no-scrollbar">
 
-    <div class="mb-8">
-        <h1 class="text-2xl font-extrabold tracking-tight">Rekod Jualan</h1>
-        <p class="text-slate-500 text-sm italic">Pantau aliran tunai dan sejarah transaksi harian.</p>
+    <div class="flex justify-between items-start mb-8 no-print">
+        <div>
+            <h1 class="text-2xl font-extrabold tracking-tight text-white">Rekod Jualan</h1>
+            <p class="text-slate-500 text-sm italic">Analisis prestasi perniagaan anda.</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="exportToCSV()" class="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white p-3 rounded-2xl transition-all border border-emerald-500/20 group">
+                <i class="fas fa-file-export text-xs group-hover:scale-110 transition"></i>
+                <span class="text-[10px] font-black uppercase ml-1 text-white">Export</span>
+            </button>
+            <button onclick="promptReset()" class="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white p-3 rounded-2xl transition-all border border-red-500/20 group">
+                <i class="fas fa-trash-alt text-xs group-hover:scale-110 transition"></i>
+                <span class="text-[10px] font-black uppercase ml-1 text-white">Reset</span>
+            </button>
+        </div>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 no-print">
         <div class="glass p-5 rounded-[2rem] border-l-4 border-emerald-500">
             <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Jualan Dipilih</p>
             <h3 class="text-2xl font-black text-emerald-400" id="filter-total">RM 0.00</h3>
@@ -30,14 +52,29 @@
         </div>
     </div>
 
-    <div class="flex flex-wrap gap-3 mb-6">
-        <button id="btn-today" onclick="fetchSales('today')" class="bg-blue-600 px-5 py-2 rounded-xl text-xs font-bold transition">Hari Ini</button>
-        <button id="btn-yesterday" onclick="fetchSales('yesterday')" class="glass hover:bg-white/10 px-5 py-2 rounded-xl text-xs font-bold transition">Semalam</button>
-        <button id="btn-all" onclick="fetchSales('all')" class="glass hover:bg-white/10 px-5 py-2 rounded-xl text-xs font-bold transition">Semua</button>
+    <div class="glass p-6 rounded-[2.5rem] mb-8 no-print border border-white/5">
+        <p class="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-4">Trend Jualan</p>
+        <div class="h-[200px] w-full">
+            <canvas id="salesChart"></canvas>
+        </div>
     </div>
 
-    <div class="overflow-x-auto rounded-3xl glass border border-slate-800">
-        <table class="w-full text-left border-collapse">
+    <div class="space-y-4 mb-6 no-print">
+        <div class="flex flex-wrap gap-3">
+            <button id="btn-today" onclick="fetchSales('today')" class="bg-blue-600 px-5 py-2 rounded-xl text-xs font-bold transition shadow-lg shadow-blue-600/20 text-white">Hari Ini</button>
+            <button id="btn-yesterday" onclick="fetchSales('yesterday')" class="glass hover:bg-white/10 px-5 py-2 rounded-xl text-xs font-bold transition text-white">Semalam</button>
+            <button id="btn-all" onclick="fetchSales('all')" class="glass hover:bg-white/10 px-5 py-2 rounded-xl text-xs font-bold transition text-white">Semua</button>
+        </div>
+        
+        <div class="relative max-w-md">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="text" id="salesSearch" onkeyup="filterSalesTable()" placeholder="Cari produk, masa atau kaedah..." 
+            class="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none search-input transition-all text-slate-200">
+        </div>
+    </div>
+
+    <div class="overflow-x-auto rounded-3xl glass border border-slate-800 no-print mb-10">
+        <table id="sales-table" class="w-full text-left border-collapse">
             <thead class="bg-white/5 text-slate-400 text-[10px] uppercase tracking-widest">
                 <tr>
                     <th class="p-5">Masa/ID</th>
@@ -47,9 +84,22 @@
                 </tr>
             </thead>
             <tbody id="sales-table-body" class="text-sm divide-y divide-slate-800">
-                </tbody>
+                <tr><td colspan="4" class="p-10 text-center text-slate-600 font-bold animate-pulse uppercase tracking-widest text-[10px]">Menyambung ke Firebase...</td></tr>
+            </tbody>
         </table>
     </div>
+
+    <div id="receipt-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="glass max-w-sm w-full rounded-[2.5rem] overflow-hidden p-8 relative border border-white/10">
+            <button onclick="closeReceipt()" class="absolute top-6 right-6 text-slate-500 hover:text-white transition"><i class="fas fa-times"></i></button>
+            <div id="receipt-content" class="text-center"></div>
+            <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl mt-8 transition flex items-center justify-center gap-2">
+                <i class="fas fa-print"></i> Cetak Resit
+            </button>
+        </div>
+    </div>
+
+    <div id="receipt-print" class="hidden p-8 text-black bg-white font-mono text-sm leading-tight"></div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -63,81 +113,154 @@
             messagingSenderId: "407192673747",
             appId: "1:407192673747:web:9196c8d72d77a642f02326"
         };
+        
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const OWNER_PASSWORD = "123"; 
+        let rawData = []; 
+        let salesChart;
+
+        // Inisialisasi Chart
+        function initChart() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [{ 
+                    label: 'Jumlah (RM)', 
+                    data: [], 
+                    borderColor: '#10b981', 
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 0
+                }]},
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function updateChart(dataArray) {
+            // Sort data mengikut masa (tua ke baru) untuk grafik
+            const sorted = [...dataArray].sort((a,b) => a.time.localeCompare(b.time));
+            salesChart.data.labels = sorted.map(d => d.time);
+            salesChart.data.datasets[0].data = sorted.map(d => parseFloat(d.totalPrice));
+            salesChart.update();
+        }
 
         window.fetchSales = (period) => {
             const tbody = document.getElementById('sales-table-body');
+            document.getElementById('salesSearch').value = "";
             let q = db.collection("sales");
-            
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
 
-            // Filter hiasan butang
             document.querySelectorAll('button[id^="btn-"]').forEach(b => {
-                b.classList.remove('bg-blue-600');
+                b.classList.remove('bg-blue-600', 'shadow-lg', 'shadow-blue-600/20');
                 b.classList.add('glass');
             });
-            document.getElementById('btn-' + period).classList.add('bg-blue-600');
-            document.getElementById('btn-' + period).classList.remove('glass');
+            document.getElementById('btn-' + period).classList.add('bg-blue-600', 'shadow-lg', 'shadow-blue-600/20');
 
-            if (period === 'today') {
-                q = q.where("date", "==", todayStr);
-            } else if (period === 'yesterday') {
-                const yesterday = new Date(now);
-                yesterday.setDate(now.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split('T')[0];
-                q = q.where("date", "==", yesterdayStr);
+            if (period === 'today') q = q.where("date", "==", todayStr);
+            else if (period === 'yesterday') {
+                const yest = new Date(now); yest.setDate(now.getDate() - 1);
+                q = q.where("date", "==", yest.toISOString().split('T')[0]);
             }
 
-            // Susun mengikut masa terbaru
             q.orderBy("timestamp", "desc").onSnapshot((snapshot) => {
                 let totalRM = 0;
-                let count = 0;
+                rawData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
                 if(snapshot.empty) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-slate-600 font-bold uppercase tracking-widest text-xs">Tiada Rekod Jualan</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-slate-600 font-bold uppercase tracking-widest text-xs">Tiada Rekod</td></tr>`;
                     document.getElementById('filter-total').innerText = "RM 0.00";
                     document.getElementById('filter-count').innerText = "0";
+                    updateChart([]);
                     return;
                 }
 
-                tbody.innerHTML = snapshot.docs.map(doc => {
-                    const data = doc.data();
+                tbody.innerHTML = rawData.map((data, index) => {
                     const val = parseFloat(data.totalPrice || 0);
                     totalRM += val;
-                    count++;
-                    
+                    const itemNames = data.items ? data.items.map(i => i.name).join(' | ') : 'Produk';
                     return `
-                        <tr class="hover:bg-white/5 transition-colors">
-                            <td class="p-5">
-                                <div class="font-bold text-slate-200">${data.time || '00:00'}</div>
-                                <div class="text-[10px] text-slate-500 italic">...${doc.id.slice(-5)}</div>
-                            </td>
-                            <td class="p-5 text-slate-400">
-                                <div class="truncate max-w-[200px]">
-                                    ${data.items ? data.items.map(i => i.name).join(', ') : 'Produk'}
-                                </div>
-                            </td>
-                            <td class="p-5">
-                                <span class="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border border-blue-500/20">
-                                    ${data.method || 'Tunai'}
-                                </span>
-                            </td>
-                            <td class="p-5 text-right font-black text-emerald-400">
-                                ${val.toFixed(2)}
-                            </td>
-                        </tr>
-                    `;
+                        <tr class="hover:bg-white/5 transition-colors sales-row cursor-pointer" onclick="showReceipt(${index})">
+                            <td class="p-5"><div class="font-bold text-slate-200">${data.time || '00:00'}</div><div class="text-[10px] text-slate-500">...${data.id.slice(-5)}</div></td>
+                            <td class="p-5 text-slate-400 truncate max-w-[150px]">${itemNames}</td>
+                            <td class="p-5 text-[9px] uppercase font-black text-blue-400">${data.method || 'Tunai'}</td>
+                            <td class="p-5 text-right font-black text-emerald-400 total-cell">${val.toFixed(2)}</td>
+                        </tr>`;
                 }).join('');
 
                 document.getElementById('filter-total').innerText = `RM ${totalRM.toFixed(2)}`;
-                document.getElementById('filter-count').innerText = count;
+                document.getElementById('filter-count').innerText = snapshot.size;
+                updateChart(rawData);
             });
         };
 
-        // Mulakan dengan data hari ini
-        fetchSales('today');
+        function filterSalesTable() {
+            const input = document.getElementById("salesSearch").value.toUpperCase();
+            const rows = document.getElementsByClassName("sales-row");
+            let filteredData = [];
+            let total = 0;
+
+            for (let i = 0; i < rows.length; i++) {
+                if (rows[i].textContent.toUpperCase().includes(input)) {
+                    rows[i].style.display = "";
+                    total += parseFloat(rows[i].querySelector(".total-cell").innerText);
+                    filteredData.push(rawData[i]);
+                } else rows[i].style.display = "none";
+            }
+            document.getElementById('filter-total').innerText = `RM ${total.toFixed(2)}`;
+            document.getElementById('filter-count').innerText = filteredData.length;
+            updateChart(filteredData);
+        }
+
+        // Fungsi Resit & Reset (Sama seperti sebelumnya)
+        function showReceipt(index) {
+            const data = rawData[index];
+            const modal = document.getElementById('receipt-modal');
+            const content = document.getElementById('receipt-content');
+            const printContent = document.getElementById('receipt-print');
+            
+            const html = `<div class="mb-4"><h2 class="text-xl font-black text-white">KETICK OS</h2><p class="text-[10px] text-slate-500 uppercase tracking-widest">Resit Jualan</p></div><div class="space-y-2 mb-6 border-y border-white/5 py-4 text-left"><div class="flex justify-between text-xs"><span class="text-slate-500">ID:</span> <span class="text-white font-mono">${data.id.slice(-10)}</span></div><div class="flex justify-between text-xs"><span class="text-slate-500">Masa:</span> <span class="text-white font-bold">${data.date} ${data.time}</span></div><div class="flex justify-between text-xs"><span class="text-slate-500">Kaedah:</span> <span class="text-blue-400 font-black uppercase">${data.method || 'Tunai'}</span></div></div><div class="text-left mb-6"><div class="space-y-1">${data.items ? data.items.map(i => `<div class="flex justify-between text-sm"><span class="text-slate-300">${i.name}</span> <span class="text-white font-bold">x${i.qty || 1}</span></div>`).join('') : '<span class="text-white">Produk Umum</span>'}</div></div><div class="pt-4 border-t-2 border-dashed border-white/10"><h1 class="text-3xl font-black text-emerald-400 tracking-tight">RM ${(parseFloat(data.totalPrice) || 0).toFixed(2)}</h1></div>`;
+            content.innerHTML = html;
+            printContent.innerHTML = `<center><h2>KETICK OS</h2><hr/></center><p>ID: ${data.id}</p><p>Masa: ${data.date} ${data.time}</p><hr/><table style="width:100%">${data.items ? data.items.map(i => `<tr><td>${i.name}</td><td align="right">x${i.qty || 1}</td></tr>`).join('') : ''}</table><hr/><h3 align="right">TOTAL: RM ${(parseFloat(data.totalPrice) || 0).toFixed(2)}</h3>`;
+            modal.classList.remove('hidden');
+        }
+
+        function closeReceipt() { document.getElementById('receipt-modal').classList.add('hidden'); }
+        function exportToCSV() {
+            if (rawData.length === 0) return alert("Tiada data.");
+            let csv = "Tarikh,Masa,Item,Kaedah,Jumlah (RM)\n";
+            rawData.forEach(r => csv += `${r.date},${r.time},"${r.items ? r.items.map(i=>i.name).join('|') : 'Produk'}",${r.method},${r.totalPrice}\n`);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "Laporan_Jualan.csv";
+            link.click();
+        }
+        async function promptReset() {
+            const pass = prompt("Password Owner:");
+            if (pass === OWNER_PASSWORD) {
+                if (confirm("Reset data jualan?")) {
+                    const snap = await db.collection("sales").get();
+                    const batch = db.batch(); snap.docs.forEach(d => batch.delete(d.ref)); await batch.commit();
+                }
+            }
+        }
+
+        window.onload = () => {
+            initChart();
+            setTimeout(() => fetchSales('today'), 800);
+        };
     </script>
 </body>
 </html>
