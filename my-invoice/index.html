@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoicing | KETICK OS</title>
+    <title>Billing | KETICK OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,7 +27,6 @@
 
         let activeEditId = null;
 
-        // --- LOAD DATA TERUS (TANPA AUTH) ---
         function listenToInvoices() {
             const q = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
             onSnapshot(q, (snapshot) => {
@@ -38,14 +37,17 @@
                 window.currentInvoices = invoices;
                 renderHistoryUI(invoices);
                 if (!activeEditId) {
-                    const nextId = String(invoices.length + 1).padStart(4, '0');
-                    document.getElementById('doc-id').innerText = `INV-2026-${nextId}`;
+                    updateDocID();
                 }
-            }, (error) => {
-                console.error("Ralat Firestore:", error);
-                alert("Sila pastikan Firestore Rules telah diubah kepada 'allow read, write: if true'");
             });
         }
+
+        window.updateDocID = () => {
+            const type = document.getElementById('doc-type').value;
+            const prefix = type === 'QUOTATION' ? 'QT' : (type === 'RECEIPT' ? 'RC' : 'INV');
+            const nextId = String((window.currentInvoices?.length || 0) + 1).padStart(4, '0');
+            document.getElementById('doc-id').innerText = `${prefix}-2026-${nextId}`;
+        };
 
         window.saveToFirestore = async (data) => {
             try {
@@ -63,6 +65,7 @@
 
                 const payload = {
                     ...data,
+                    docType: document.getElementById('doc-type').value,
                     items: items,
                     updatedAt: serverTimestamp()
                 };
@@ -90,8 +93,6 @@
         };
 
         window.setActiveEdit = (id) => { activeEditId = id; };
-
-        // Jalankan listener sebaik sahaja page dibuka
         listenToInvoices();
     </script>
 
@@ -100,7 +101,10 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; padding-bottom: 50px; }
         .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .tab-active { background: #3b82f6; opacity: 1 !important; }
-        @media print { .no-print { display: none !important; } body { background: white; color: black; padding: 0; } .glass { border: none; background: transparent; } }
+        .type-invoice { color: #3b82f6; }
+        .type-quotation { color: #f59e0b; }
+        .type-receipt { color: #10b981; }
+        @media print { .no-print { display: none !important; } body { background: white !important; color: black !important; padding: 0; } .glass { border: none; background: transparent; } }
     </style>
 </head>
 <body class="p-4 lg:p-8">
@@ -109,27 +113,26 @@
         <div class="no-print mb-8">
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h1 class="text-xl font-black uppercase tracking-widest text-blue-500">Ketick Invoicing</h1>
-                    <p class="text-[9px] text-slate-500 font-bold tracking-widest uppercase">Direct Access Mode</p>
+                    <h1 class="text-xl font-black uppercase tracking-widest text-blue-500">Ketick Billing</h1>
+                    <p class="text-[9px] text-slate-500 font-bold tracking-widest uppercase">Multi-Doc Mode</p>
                 </div>
-                <button onclick="window.location.reload()" class="bg-white/5 text-slate-400 w-10 h-10 rounded-xl transition hover:bg-blue-600 hover:text-white">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
+                <select id="doc-type" onchange="updateUIForType()" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-bold uppercase outline-none">
+                    <option value="INVOICE">Invoice</option>
+                    <option value="QUOTATION">Quotation</option>
+                    <option value="RECEIPT">Receipt</option>
+                </select>
             </div>
             
             <div class="flex gap-2 p-1 glass rounded-2xl mb-6">
                 <button onclick="switchTab('creator')" id="tab-creator" class="tab-active flex-1 py-2 rounded-xl text-[10px] font-bold transition">PENYEDIAAN</button>
-                <button onclick="switchTab('history')" id="tab-history" class="flex-1 py-2 rounded-xl text-[10px] font-bold opacity-50 transition">REKOD JUALAN</button>
+                <button onclick="switchTab('history')" id="tab-history" class="flex-1 py-2 rounded-xl text-[10px] font-bold opacity-50 transition">REKOD</button>
             </div>
         </div>
 
         <div id="section-creator">
             <div class="no-print flex gap-2 mb-4 justify-end">
-                <button onclick="window.print()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition hover:bg-slate-600">
+                <button onclick="window.print()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-600 transition">
                     <i class="fas fa-print mr-1"></i> CETAK
-                </button>
-                <button onclick="prepareWhatsApp()" class="bg-emerald-600 px-4 py-2 rounded-xl text-xs font-bold transition hover:bg-emerald-500">
-                    <i class="fab fa-whatsapp mr-1"></i> WA
                 </button>
                 <button onclick="generatePDF(true)" class="bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold transition hover:bg-blue-500 shadow-lg shadow-blue-500/20">
                     <i class="fas fa-save mr-1"></i> <span id="save-btn-text">SIMPAN & PDF</span>
@@ -143,7 +146,7 @@
                         <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Digital Business Solution</p>
                     </div>
                     <div class="text-right">
-                        <h3 class="text-3xl font-black text-slate-300 uppercase">Invoice</h3>
+                        <h3 class="text-3xl font-black uppercase tracking-tighter" id="display-doc-title">Invoice</h3>
                         <p class="text-xs text-slate-500 font-mono" id="doc-id">...</p>
                     </div>
                 </div>
@@ -166,27 +169,28 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="text-[9px] font-black text-slate-500 border-b border-slate-800 uppercase">
-                                <th class="pb-3">Item</th>
+                                <th class="pb-3">Item / Deskripsi</th>
                                 <th class="pb-3 text-center w-16">Unit</th>
                                 <th class="pb-3 text-right">Harga (RM)</th>
                             </tr>
                         </thead>
                         <tbody id="item-list">
                             <tr class="border-b border-slate-800/50">
-                                <td class="py-4"><input type="text" placeholder="Deskripsi..." class="bg-transparent text-sm font-semibold w-full outline-none text-slate-300"></td>
+                                <td class="py-4"><input type="text" placeholder="Masukkan butiran..." class="bg-transparent text-sm font-semibold w-full outline-none text-slate-300"></td>
                                 <td class="py-4 text-center"><input type="number" value="1" oninput="calculateTotal()" class="bg-transparent text-sm text-center w-full outline-none qty text-slate-300"></td>
                                 <td class="py-4 text-right"><input type="number" value="0.00" oninput="calculateTotal()" class="bg-transparent text-sm text-right w-full outline-none price text-slate-300"></td>
                             </tr>
                         </tbody>
                     </table>
                     <button onclick="addItem()" class="no-print mt-4 text-[10px] font-bold text-blue-500 uppercase">
-                        <i class="fas fa-plus mr-1"></i> Tambah Baris
+                        <i class="fas fa-plus mr-1"></i> Tambah Item
                     </button>
                 </div>
 
-                <div class="flex justify-end pt-6 border-t border-slate-800">
-                    <div class="text-right">
-                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-1 tracking-widest">Jumlah Perlu Dibayar</p>
+                <div class="flex justify-between items-center pt-6 border-t border-slate-800">
+                    <div id="receipt-stamp" class="hidden border-4 border-emerald-500/30 text-emerald-500/30 font-black px-4 py-1 rounded-xl rotate-[-15deg] uppercase text-xl">PAID</div>
+                    <div class="text-right ml-auto">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-1 tracking-widest">Jumlah Keseluruhan</p>
                         <h2 class="text-3xl font-black text-emerald-500">RM <span id="grand-total">0.00</span></h2>
                     </div>
                 </div>
@@ -200,6 +204,28 @@
 
     <script>
         document.getElementById('doc-date').valueAsDate = new Date();
+
+        function updateUIForType() {
+            const type = document.getElementById('doc-type').value;
+            const titleEl = document.getElementById('display-doc-title');
+            const stamp = document.getElementById('receipt-stamp');
+            
+            titleEl.innerText = type;
+            
+            // Tukar warna tema mengikut jenis
+            if(type === 'QUOTATION') {
+                titleEl.className = "text-3xl font-black uppercase tracking-tighter text-amber-500";
+                stamp.classList.add('hidden');
+            } else if(type === 'RECEIPT') {
+                titleEl.className = "text-3xl font-black uppercase tracking-tighter text-emerald-500";
+                stamp.classList.remove('hidden');
+            } else {
+                titleEl.className = "text-3xl font-black uppercase tracking-tighter text-slate-300";
+                stamp.classList.add('hidden');
+            }
+            
+            if(typeof window.updateDocID === 'function') window.updateDocID();
+        }
 
         function switchTab(tab) {
             document.getElementById('section-creator').classList.toggle('hidden', tab !== 'creator');
@@ -218,29 +244,29 @@
 
         function addItem(desc = "", qty = 1, price = "0.00") {
             const row = `<tr class="border-b border-slate-800/50">
-                <td class="py-4"><input type="text" value="${desc}" placeholder="Deskripsi..." class="bg-transparent text-sm font-semibold w-full outline-none text-slate-300"></td>
+                <td class="py-4"><input type="text" value="${desc}" placeholder="Butiran..." class="bg-transparent text-sm font-semibold w-full outline-none text-slate-300"></td>
                 <td class="py-4 text-center"><input type="number" value="${qty}" oninput="calculateTotal()" class="bg-transparent text-sm text-center w-full outline-none qty text-slate-300"></td>
                 <td class="py-4 text-right"><input type="number" value="${price}" oninput="calculateTotal()" class="bg-transparent text-sm text-right w-full outline-none price text-slate-300"></td>
             </tr>`;
             document.getElementById('item-list').insertAdjacentHTML('beforeend', row);
+            calculateTotal();
         }
 
         async function generatePDF(shouldSave = false) {
+            const type = document.getElementById('doc-type').value;
             const invNo = document.getElementById('doc-id').innerText;
-            const cust = document.getElementById('custName').value || 'Pelanggan';
-            const total = document.getElementById('grand-total').innerText;
-
+            const element = document.getElementById('document-area');
+            
             if(shouldSave) {
                 await window.saveToFirestore({
                     invoiceNo: invNo,
-                    customerName: cust,
+                    customerName: document.getElementById('custName').value || 'Pelanggan',
                     customerPhone: document.getElementById('custPhone').value,
-                    totalAmount: total,
+                    totalAmount: document.getElementById('grand-total').innerText,
                     date: document.getElementById('doc-date').value
                 });
             }
 
-            const element = document.getElementById('document-area');
             const opt = {
                 margin: 10,
                 filename: `KETICK_${invNo}.pdf`,
@@ -254,30 +280,39 @@
         window.renderHistoryUI = (invoices) => {
             const container = document.getElementById('history-container');
             if(invoices.length === 0) {
-                container.innerHTML = '<p class="col-span-full text-center py-20 opacity-30 text-xs">TIADA REKOD DITEMUI</p>';
+                container.innerHTML = '<p class="col-span-full text-center py-20 opacity-30 text-xs uppercase tracking-widest">Tiada Rekod</p>';
                 return;
             }
-            container.innerHTML = invoices.map(inv => `
+            container.innerHTML = invoices.map(inv => {
+                let color = 'text-blue-400';
+                if(inv.docType === 'QUOTATION') color = 'text-amber-500';
+                if(inv.docType === 'RECEIPT') color = 'text-emerald-500';
+                
+                return `
                 <div class="glass p-6 rounded-[2rem] border border-white/5 flex flex-col gap-4">
                     <div class="flex justify-between items-start">
                         <div>
-                            <h4 class="font-bold text-blue-400 text-lg uppercase tracking-tight">${inv.customerName}</h4>
+                            <span class="text-[8px] font-bold px-2 py-0.5 rounded bg-white/5 mb-1 inline-block opacity-60">${inv.docType || 'INVOICE'}</span>
+                            <h4 class="font-bold text-lg uppercase tracking-tight">${inv.customerName}</h4>
                             <p class="text-[10px] opacity-40 font-mono">${inv.invoiceNo} • ${inv.date}</p>
                         </div>
-                        <span class="text-xl font-black text-emerald-400 font-mono">RM ${inv.totalAmount}</span>
+                        <span class="text-xl font-black ${color} font-mono text-right leading-none">RM ${inv.totalAmount}</span>
                     </div>
                     <div class="flex gap-2 border-t border-white/5 pt-4">
-                        <button onclick="editInvoice('${inv.id}')" class="flex-1 bg-white/5 py-3 rounded-xl text-[9px] font-bold uppercase hover:bg-blue-600 transition">Edit</button>
+                        <button onclick="editInvoice('${inv.id}')" class="flex-1 bg-white/5 py-3 rounded-xl text-[9px] font-bold uppercase hover:bg-blue-600 transition">Buka</button>
                         <button onclick="deleteInvoice('${inv.id}')" class="bg-red-900/10 text-red-500 px-4 rounded-xl hover:bg-red-600 hover:text-white transition"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         };
 
         window.editInvoice = (id) => {
             const inv = window.currentInvoices.find(i => i.id === id);
             if(!inv) return;
             window.setActiveEdit(id);
+            document.getElementById('doc-type').value = inv.docType || 'INVOICE';
+            updateUIForType();
+            
             document.getElementById('save-btn-text').innerText = "KEMASKINI & PDF";
             document.getElementById('doc-id').innerText = inv.invoiceNo;
             document.getElementById('custName').value = inv.customerName;
@@ -289,13 +324,6 @@
             calculateTotal();
             switchTab('creator');
         };
-
-        function prepareWhatsApp() {
-            const phone = document.getElementById('custPhone').value;
-            if(!phone) return alert("Sila masukkan No Telefon!");
-            const msg = `Salam *${document.getElementById('custName').value}*,\nInvois *#${document.getElementById('doc-id').innerText}* berjumlah *RM${document.getElementById('grand-total').innerText}* sedia untuk disemak.`;
-            window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
-        }
     </script>
 </body>
 </html>
